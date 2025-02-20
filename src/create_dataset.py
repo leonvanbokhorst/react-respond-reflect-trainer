@@ -5,10 +5,12 @@ Uses LiteLLM to generate human-like interactions with physical, verbal, and cogn
 
 import json
 from typing import List, Dict, TypedDict, Tuple
-from litellm import completion
+from litellm import acompletion
 import random
 from pathlib import Path
 from tqdm import tqdm
+import asyncio
+from asyncio import gather
 
 
 class Message(TypedDict):
@@ -125,7 +127,18 @@ def extract_content_from_response(formatted_response: str) -> str:
     return parts.strip()
 
 
-def generate_user_response(theme: str, conversation_history: List[Dict]) -> str:
+async def async_completion(messages: List[Dict], temperature: float = 0.8) -> str:
+    """Wrapper for async LiteLLM completion."""
+    response = await acompletion(
+        model="gpt-4o-mini",
+        messages=messages,
+        temperature=temperature,
+        max_tokens=500,
+    )
+    return response.choices[0].message.content
+
+
+async def generate_user_response(theme: str, conversation_history: List[Dict]) -> str:
     """Generate a natural user response based on conversation history."""
     # Format conversation history without role prefixes
     formatted_history = []
@@ -156,17 +169,14 @@ Examples of tone:
 
 Response:"""
 
-    response = completion(
-        model="gpt-4o-mini",
+    content = await async_completion(
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.8,  # Slightly higher temperature for more natural variation
-        max_tokens=100,
+        temperature=0.8,
     )
+    return content.strip().replace("User: ", "")
 
-    return response.choices[0].message.content.strip().replace("User: ", "")
 
-
-def generate_reaction_response_reflection(
+async def generate_reaction_response_reflection(
     theme: str, user_prompt: str, conversation_history: List[Dict] = None
 ) -> tuple[str, str, str]:
     """Generate the reaction, response, and reflection using LiteLLM."""
@@ -218,17 +228,9 @@ Format with numbers (1., 2., 3.) and keep it concise and natural."""
         messages.extend(conversation_history)
     messages.append({"role": "user", "content": prompt})
 
-    response = completion(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0.8,
-        max_tokens=500,
-    )
+    content = await async_completion(messages=messages, temperature=0.8)
 
     # Parse the response into three parts more robustly
-    content = response.choices[0].message.content
-
-    # Split by numbered sections and handle potential formatting variations
     parts = []
     current_part = []
     lines = content.split("\n")
@@ -274,7 +276,7 @@ Format with numbers (1., 2., 3.) and keep it concise and natural."""
     return parts[0], parts[1], parts[2]
 
 
-def generate_conversation(theme: str, num_turns: int = 6) -> List[Message]:
+async def generate_conversation(theme: str, num_turns: int = 6) -> List[Message]:
     """Generate a multi-turn conversation with reaction, response, and reflection."""
     # Start with discovery
     initial_prompt = random.choice(DISCOVERY_PROMPTS)
@@ -285,7 +287,7 @@ def generate_conversation(theme: str, num_turns: int = 6) -> List[Message]:
     ]
 
     # Generate initial response
-    reaction, response_text, reflection = generate_reaction_response_reflection(
+    reaction, response_text, reflection = await generate_reaction_response_reflection(
         theme, messages[-1]["content"]
     )
     messages.append(
@@ -298,14 +300,16 @@ def generate_conversation(theme: str, num_turns: int = 6) -> List[Message]:
     # Generate follow-up turns
     for _ in range(num_turns - 1):
         # Generate user's response
-        user_message = generate_user_response(theme, messages[1:])
+        user_message = await generate_user_response(theme, messages[1:])
         messages.append({"role": "user", "content": user_message})
 
         # Generate virtual human's response
-        reaction, response_text, reflection = generate_reaction_response_reflection(
-            theme,
-            user_message,
-            conversation_history=messages[1:],  # Exclude system prompt from history
+        reaction, response_text, reflection = (
+            await generate_reaction_response_reflection(
+                theme,
+                user_message,
+                conversation_history=messages[1:],  # Exclude system prompt from history
+            )
         )
         messages.append(
             {
@@ -317,13 +321,28 @@ def generate_conversation(theme: str, num_turns: int = 6) -> List[Message]:
     return messages
 
 
-def generate_dataset(num_conversations: int = 10) -> List[List[Message]]:
-    """Generate multiple multi-turn conversations."""
-    conversations = []
-    for _ in tqdm(range(num_conversations), desc="Generating conversations"):
+async def generate_batch_conversations(
+    batch_size: int, theme: str = None
+) -> List[List[Message]]:
+    """Generate multiple conversations in parallel."""
+    if theme is None:
         theme = random.choice(list(THEMES.keys()))
-        conversation = generate_conversation(theme)
-        conversations.append(conversation)
+    tasks = [generate_conversation(theme) for _ in range(batch_size)]
+    return await gather(*tasks)
+
+
+async def generate_and_save_batch(
+    batch_number: int, batch_size: int = 10
+) -> List[List[Message]]:
+    """Generate and save a batch of conversations."""
+    theme = random.choice(list(THEMES.keys()))
+    print(f"\nStarting batch {batch_number}/{50} with theme: {THEMES[theme]}")
+
+    conversations = await generate_batch_conversations(batch_size, theme)
+
+    # Save this batch
+    output_file = f"dataset_virtual_human_batch_{batch_number:03d}.json"
+    save_dataset(conversations, output_file)
     return conversations
 
 
@@ -335,14 +354,48 @@ def save_dataset(conversations: List[List[Message]], output_file: str = "dataset
     print(f"Dataset saved to {output_file}")
 
 
+async def main_async():
+    """Async main function to generate and save the dataset in batches."""
+    total_conversations = 500
+    batch_size = 10
+    num_batches = total_conversations // batch_size
+
+    print(f"Generating {total_conversations} conversations in {num_batches} batches...")
+    print(f"Each batch will generate {batch_size} conversations in parallel")
+    print("Estimated time: ~30-45 minutes total (~1 minute per batch)")
+
+    all_conversations = []
+    try:
+        for batch in range(num_batches):
+            batch_conversations = await generate_and_save_batch(batch + 1, batch_size)
+            all_conversations.extend(batch_conversations)
+
+            # Print progress
+            total_turns = sum(len(conv) // 2 - 1 for conv in all_conversations)
+            print(
+                f"Progress: {len(all_conversations)}/{total_conversations} conversations"
+            )
+            print(f"Total turns so far: {total_turns}")
+
+    except KeyboardInterrupt:
+        print("\nGeneration interrupted! Saving progress...")
+    finally:
+        # Save all conversations generated so far to a final file
+        if all_conversations:
+            save_dataset(
+                all_conversations,
+                output_file="dataset_virtual_human_training_combined.json",
+            )
+            print("\nFinal dataset stats:")
+            print(f"Total conversations: {len(all_conversations)}")
+            print(
+                f"Total turns: {sum(len(conv) // 2 - 1 for conv in all_conversations)}"
+            )
+
+
 def main():
-    """Main function to generate and save the dataset."""
-    print("Generating virtual human connection conversations...")
-    conversations = generate_dataset(
-        num_conversations=10
-    )  # 10 conversations with 6 turns each
-    save_dataset(conversations, output_file="dataset_virtual_human_poc.json")
-    print("Dataset generation complete!")
+    """Main function to run the async generation."""
+    asyncio.run(main_async())
 
 
 if __name__ == "__main__":
