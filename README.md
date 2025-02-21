@@ -34,19 +34,6 @@ EMPATH is a unique virtual human model that implements a three-stage response pa
 - GRPO (Guided Reward Proximal Optimization) training
 - 4-bit quantization for efficient inference
 
-## Installation 🛠️
-
-1. Clone this repository:
-```bash
-git clone https://github.com/yourusername/empath.git
-cd empath
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
 ## Training 🚀
 
 To train the model:
