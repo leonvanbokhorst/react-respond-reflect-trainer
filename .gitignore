@@ -1,5 +1,15 @@
 .vscode
 .env
 .venv
+venv
 __pycache__
 .DS_Store
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+unsloth_compiled*
+grpo_trainer_lora_model/
+outputs/
