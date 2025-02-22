@@ -1,1 +1,4 @@
 litellm
+openai
+python-dotenv
+tqdm
