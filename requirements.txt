@@ -2,3 +2,4 @@ litellm
 openai
 python-dotenv
 tqdm
+datasets

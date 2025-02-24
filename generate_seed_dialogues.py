@@ -2,14 +2,14 @@
 Generate seed dialogues for training using GPT-4-mini.
 
 This script generates a set of seed dialogues following a specific format with
-<react>, <respond>, and <reflect> tags. The generated dialogues are saved to a JSON file
-for later refinement and use in training.
+<react>, <respond>, and <reflect> tags, using curated examples as seeds.
 """
 
 import json
 import os
 import time
-from typing import List, Dict, Optional
+import random
+from typing import List, Dict, Optional, Set
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -22,6 +22,50 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 if not client.api_key:
     raise ValueError("OPENAI_API_KEY environment variable not set!")
+
+def load_curated_dialogs(dialog_dir: str = "curated_seed_dialogs") -> List[str]:
+    """
+    Load all curated dialog examples from the specified directory.
+    
+    Args:
+        dialog_dir: Directory containing the dialog txt files
+        
+    Returns:
+        List of dialog strings
+    """
+    dialogs = []
+    dialog_path = Path(dialog_dir)
+    
+    for file in dialog_path.glob("*.txt"):
+        with open(file, "r", encoding="utf-8") as f:
+            # Skip the header lines
+            content = f.read()
+            dialog_content = content.split("==================================================\n")[1].strip()
+            dialogs.append(dialog_content)
+            
+    return dialogs
+
+def get_random_example(
+    curated_dialogs: List[str],
+    used_examples: Set[int]
+) -> Optional[str]:
+    """
+    Get a random dialog example that hasn't been used yet.
+    
+    Args:
+        curated_dialogs: List of all curated dialogs
+        used_examples: Set of indices of already used examples
+        
+    Returns:
+        A dialog string or None if all examples have been used
+    """
+    available_indices = set(range(len(curated_dialogs))) - used_examples
+    if not available_indices:
+        return None
+        
+    chosen_idx = random.choice(list(available_indices))
+    used_examples.add(chosen_idx)
+    return curated_dialogs[chosen_idx]
 
 class DialogueGenerationError(Exception):
     """Custom exception for dialogue generation errors."""
@@ -97,7 +141,7 @@ def generate_seed_dialogue(
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a dialogue generator that produces multi-turn conversations."
+                        "content": "You are a dialogue generator that produces high quality multi-turn human-like conversations."
                     },
                     {"role": "user", "content": prompt}
                 ],
@@ -122,43 +166,62 @@ def generate_seed_dialogue(
     
     return None
 
+def get_next_batch_number() -> int:
+    """Find the next batch number by checking existing files."""
+    existing_batches = list(Path(".").glob("seed_dialogues_batch_*.json"))
+    if not existing_batches:
+        return 1
+    
+    # Extract batch numbers from filenames
+    batch_numbers = [int(file.stem.split("_")[-1]) for file in existing_batches]
+    return max(batch_numbers) + 1
+
 def main():
     """Main function to generate and save dialogues."""
-    # Define seed examples
-    seed_examples = (
-        "Example dialogue:\n"
-        "User: Hey, do you have a minute to help me with something?\n"
-        "Virtual Human:\n"
-        "  <react>smiles and nods</react>\n"
-        "  <respond>Sure! What do you need help with?</respond>\n"
-        "  <reflect>I sense she might be a bit nervous about sharing her problem.</reflect>\n"
-    )
+    # Load curated dialogs
+    curated_dialogs = load_curated_dialogs()
+    used_examples = set()  # Track which examples we've used
+    batch_size = 10
+    total_dialogues = 500
+    temperature = 0.85
 
-    # Define prompt template
+    # Find next batch number and calculate remaining dialogues
+    batch_number = get_next_batch_number()
+    dialogues_generated = (batch_number - 1) * batch_size
+    dialogues_remaining = total_dialogues - dialogues_generated
+
+    print(f"Continuing from batch {batch_number}, {dialogues_remaining} dialogues remaining")
+
+    # Define prompt template with more guidance
     prompt_template = (
-        "Below is an example seed dialogue:\n"
+        "Below is an example of a natural dialogue that shows emotional depth and gradual trust-building:\n"
         "{seed_examples}\n\n"
-        "Using the same format, generate a new multi-turn dialogue that follows this structure. "
-        "Each turn should include a <react>, a <respond>, and a <reflect> section in that order, "
-        "and should build upon the previous turn's context. The dialogue should be natural and realistic.\n\n"
+        "Using the same format, generate a new dialogue that:\n"
+        "- Shows natural progression from hesitation to openness\n"
+        "- Balances emotional support with practical help\n"
+        "- Includes <react>, <respond>, and <reflect> tags in that order\n\n"
         "New dialogue:\n"
     )
 
-    # Configuration
-    num_dialogues = 50  # Generate 50 seed conversations
-    temperature = 0.85  # Slightly increased temperature for more diversity
-    output_file = Path("seed_dialogues.json")
     generated_dialogues: List[Dict[str, str]] = []
     failed_generations = 0
 
     # Generate dialogues with progress bar
-    with tqdm(total=num_dialogues, desc="Generating dialogues") as pbar:
-        while len(generated_dialogues) < num_dialogues:
+    with tqdm(total=dialogues_remaining, desc="Generating dialogues") as pbar:
+        while len(generated_dialogues) < dialogues_remaining:
+            # Reset used examples when we've used them all
+            if len(used_examples) >= len(curated_dialogs):
+                print("\nResetting example pool for next batch...")
+                used_examples.clear()
+            
+            # Get a random example from our curated set
+            seed_example = get_random_example(curated_dialogs, used_examples)
+            
             dialogue = generate_seed_dialogue(
-                seed_examples=seed_examples,
+                seed_examples=seed_example,
                 prompt_template=prompt_template,
-                temperature=temperature,  # Pass the temperature
-                max_tokens=800  # Increased token limit for longer conversations
+                temperature=random.uniform(temperature - 0.1, temperature + 0.1),
+                max_tokens=2048
             )
             
             if dialogue:
@@ -167,20 +230,38 @@ def main():
                     "dialogue": dialogue
                 })
                 pbar.update(1)
+                
+                # Save every 10 dialogues
+                if len(generated_dialogues) % batch_size == 0:
+                    batch_output_file = Path(f"seed_dialogues_batch_{batch_number}.json")
+                    current_batch = generated_dialogues[-batch_size:]  # Get last 10 dialogues
+                    
+                    with open(batch_output_file, "w", encoding="utf-8") as f:
+                        json.dump(current_batch, f, ensure_ascii=False, indent=2)
+                    
+                    print(f"\nSaved batch {batch_number} to: {batch_output_file}")
+                    batch_number += 1
             else:
                 failed_generations += 1
-                if failed_generations >= 3:  # Stop if too many failures
+                if failed_generations >= 3:
                     print("\nToo many failed generations. Stopping early.")
                     break
 
-    # Save the generated dialogues
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(generated_dialogues, f, ensure_ascii=False, indent=2)
+    # Save any remaining dialogues
+    if len(generated_dialogues) % batch_size != 0:
+        remaining = len(generated_dialogues) % batch_size
+        batch_output_file = Path(f"seed_dialogues_batch_{batch_number}.json")
+        final_batch = generated_dialogues[-remaining:]  # Get remaining dialogues
+        
+        with open(batch_output_file, "w", encoding="utf-8") as f:
+            json.dump(final_batch, f, ensure_ascii=False, indent=2)
+        
+        print(f"\nSaved final batch to: {batch_output_file}")
 
     print(f"\nGeneration complete!")
     print(f"Successfully generated: {len(generated_dialogues)} dialogues")
     print(f"Failed generations: {failed_generations}")
-    print(f"Saved to: {output_file}")
+    print(f"Total batches saved: {batch_number}")
 
 if __name__ == "__main__":
     main() 
