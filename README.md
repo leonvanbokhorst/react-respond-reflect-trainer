@@ -1,16 +1,3 @@
----
-language:
-- en
-license: mit
-pretty_name: React-Respond-Reflect Dialogues
-size_categories:
-- n<1K
-task_categories:
-- conversational
-task_ids:
-- dialogue-modeling
-- empathetic-dialogue
----
 
 # React-Respond-Reflect Dialogues Dataset 🎭
 
