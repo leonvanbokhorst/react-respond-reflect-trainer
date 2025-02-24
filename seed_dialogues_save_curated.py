@@ -1,8 +1,53 @@
+"""
+Save manually curated dialogues with automatic backup functionality.
+
+This script processes manually curated dialogue files and saves them in the proper format
+while creating timestamped backups. It handles the transition from raw dialogue files
+to the structured JSON format used by the dataset.
+
+Features:
+- Automatic backup creation with timestamps
+- Original structure preservation
+- Header handling for dialogue files
+- Safe file processing with error handling
+
+Example:
+    $ python seed_dialogues_save_curated.py
+
+The script expects dialogue files in the 'dialogs_to_curate' directory and
+saves the processed results as 'seed_dialogues_curated.json'.
+"""
+
 import json
 import os
 from datetime import datetime
 
 def save_curated_dialogs():
+    """
+    Save curated dialogues while creating a backup of the original.
+    
+    Workflow:
+    1. Loads the original dialogue structure
+    2. Processes each curated dialogue file
+    3. Creates a timestamped backup
+    4. Saves the curated version
+    
+    The function expects dialogue files to be in a specific format:
+    - Located in the 'dialogs_to_curate' directory
+    - Named as 'dialog_XXX.txt' where XXX is a number
+    - Contains a header section separated by '==='
+    
+    Returns:
+        None
+        
+    Side effects:
+        - Creates a backup file with timestamp
+        - Creates/updates seed_dialogues_curated.json
+        
+    Raises:
+        FileNotFoundError: If required files are missing
+        json.JSONDecodeError: If JSON parsing fails
+    """
     # Load original dialogs to get structure
     with open('seed_dialogues.json', 'r') as f:
         dialogs = json.load(f)

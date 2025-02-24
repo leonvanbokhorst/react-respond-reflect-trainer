@@ -1,3 +1,29 @@
+"""
+Convert generated dialogues to HuggingFace dataset format.
+
+This script processes dialogue JSON files and converts them into a format suitable
+for uploading to the HuggingFace Hub. It handles message role assignment,
+generates dataset statistics, and manages the upload process.
+
+Features:
+- Automatic message role assignment
+- Dataset statistics generation
+- Private dataset publishing
+- Progress tracking with tqdm
+
+Example:
+    $ python seed_dialogues_convert_to_hf.py
+
+Environment Variables:
+    HF_TOKEN (str): HuggingFace API token for dataset upload
+
+Dependencies:
+    - datasets
+    - huggingface_hub
+    - python-dotenv
+    - tqdm
+"""
+
 from datasets import Dataset
 from huggingface_hub import login
 import json
@@ -5,9 +31,32 @@ import glob
 from tqdm import tqdm
 import os
 from dotenv import load_dotenv
+from typing import List, Dict
 
-def convert_dialog_to_messages(dialogue_str):
-    """Convert a dialogue string into a list of message dictionaries"""
+def convert_dialog_to_messages(dialogue_str: str) -> List[Dict[str, str]]:
+    """
+    Convert a dialogue string into a list of message dictionaries.
+    
+    Processes raw dialogue text and structures it into a list of messages with
+    appropriate role assignments (user/assistant). Handles the React-Respond-Reflect
+    format while preserving all tags.
+    
+    Args:
+        dialogue_str: Raw dialogue string to convert
+        
+    Returns:
+        List of dictionaries, each containing:
+            - role: "user" or "assistant"
+            - content: The message content
+            
+    Example:
+        >>> dialog = "User: Hi!\\n\\nVirtual Human: <react>*waves*</react>..."
+        >>> convert_dialog_to_messages(dialog)
+        [
+            {"role": "user", "content": "Hi!"},
+            {"role": "assistant", "content": "<react>*waves*</react>..."}
+        ]
+    """
     messages = []
     # Split on double newlines to separate turns
     turns = dialogue_str.strip().split("\n\n")
@@ -28,6 +77,23 @@ def convert_dialog_to_messages(dialogue_str):
     return messages
 
 def main():
+    """
+    Main function to convert and upload dialogues to HuggingFace.
+    
+    Workflow:
+    1. Authenticates with HuggingFace
+    2. Loads all dialogue JSON files
+    3. Converts dialogues to message format
+    4. Generates dataset statistics
+    5. Uploads to HuggingFace Hub
+    
+    Environment variables used:
+        HF_TOKEN: Required for HuggingFace authentication
+        
+    Raises:
+        ValueError: If HF_TOKEN is not set
+        Exception: If dataset upload fails
+    """
     # Load environment variables
     load_dotenv()
     

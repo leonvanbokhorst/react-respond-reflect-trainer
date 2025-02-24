@@ -1,17 +1,51 @@
+"""
+Validate and fix XML-style tags in dialogue responses.
+
+This script processes dialogue files to ensure proper formatting of React-Respond-Reflect
+tags. It validates tag presence, order, and format, fixing common issues automatically.
+
+Features:
+- Tag order verification (<react> -> <respond> -> <reflect>)
+- Format standardization (especially for react tags with asterisks)
+- Detailed fix reporting
+- Batch processing with progress tracking
+
+Example:
+    $ python seed_dialogues_validate_tags.py
+
+The script processes all JSON files in the current directory containing dialogues.
+"""
+
 import json
 import glob
 import re
 from tqdm import tqdm
 
-def fix_tags(text):
+def fix_tags(text: str) -> tuple[str, bool]:
     """
-    Fixes all tags to ensure proper formatting:
-    <react>*...*</react>
-    <respond>...</respond>
-    <reflect>...</reflect>
-    Returns (fixed_text, was_modified)
+    Fix all tags to ensure proper formatting.
+    
+    Processes dialogue text to standardize tag format:
+    - <react>*...*</react>
+    - <respond>...</respond>
+    - <reflect>...</reflect>
+    
+    Args:
+        text: The dialogue text to process
+        
+    Returns:
+        tuple containing:
+            - fixed_text: The processed text with standardized tags
+            - was_modified: Boolean indicating if any changes were made
+            
+    Example:
+        >>> text = "Virtual Human: <react>smiles</react>\\n<respond>Hi!</respond>"
+        >>> fixed, modified = fix_tags(text)
+        >>> print(fixed)
+        "Virtual Human: <react>*smiles*</react>\\n<respond>Hi!</respond>"
     """
     def fix_react(match):
+        """Helper function to fix react tag content."""
         content = match.group(1).strip()
         # Remove existing asterisks if they exist
         content = content.strip('*')
@@ -19,6 +53,7 @@ def fix_tags(text):
         return f"<react>*{content}*</react>"
     
     def fix_tag(match, tag_name):
+        """Helper function to fix respond/reflect tag content."""
         content = match.group(1).strip()
         return f"<{tag_name}>{content}</{tag_name}>"
     
@@ -66,6 +101,22 @@ def fix_tags(text):
     return text, text != original
 
 def main():
+    """
+    Main function to process and fix dialogue files.
+    
+    Workflow:
+    1. Finds all JSON files in current directory
+    2. Processes each file's dialogues
+    3. Fixes tag formatting issues
+    4. Saves modified files
+    5. Reports statistics on fixes made
+    
+    The script maintains the original file structure while fixing:
+    - Missing tags
+    - Improper tag order
+    - Inconsistent formatting
+    - Missing asterisks in react tags
+    """
     json_files = glob.glob("*.json")
     print(f"Found {len(json_files)} JSON files to process... 🔍")
     
