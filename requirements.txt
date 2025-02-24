@@ -1,5 +1,12 @@
-litellm
-openai
-python-dotenv
-tqdm
-datasets
+unsloth[cuda] @ git+https://github.com/unslothai/unsloth.git
+unsloth_zoo
+xformers
+trl
+peft
+accelerate
+bitsandbytes
+transformers>=4.37.2
+datasets>=2.16.1
+torch>=2.1.0
+tqdm>=4.66.1
+packaging
