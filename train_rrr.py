@@ -129,12 +129,12 @@ def prepare_model_and_tokenizer(
     # Add LoRA adapters
     model = FastLanguageModel.get_peft_model(
         model,
-        r=8,                # Keep rank for learning capacity
+        r=16,                # Keep rank for learning capacity
         target_modules=[
             "q_proj", "k_proj", "v_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj",
         ],
-        lora_alpha=4,       # Halved alpha for more conservative updates
+        lora_alpha=8,       # Halved alpha for more conservative updates
         lora_dropout=0.05,  # Small dropout for stability
         bias="none",
         use_gradient_checkpointing="True",
