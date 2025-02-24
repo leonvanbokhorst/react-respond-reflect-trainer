@@ -139,7 +139,4 @@ dataset = load_dataset("leonvanbokhorst/react-respond-reflect-dialogues-v2")
 }
 ```
 
-## License 📜
-
-MIT License - See LICENSE file for details 
 
