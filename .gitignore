@@ -16,4 +16,5 @@ outputs/
 empath-model/
 data/
 curated_seed_dialogs/
-dialogs/
+dialogues/
+curated_seed_dialogues/
