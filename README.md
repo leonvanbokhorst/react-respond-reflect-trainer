@@ -1,117 +1,130 @@
-# EMPATH: Embodied Multi-modal Personality And Thought Handler 🤖
+---
+language:
+- en
+license: mit
+pretty_name: React-Respond-Reflect Dialogues
+size_categories:
+- n<1K
+task_categories:
+- conversational
+task_ids:
+- dialogue-modeling
+- empathetic-dialogue
+---
 
-Train an LLM to engage in natural conversations with emotional intelligence, physical presence, and thoughtful reflections.
+# React-Respond-Reflect Dialogues Dataset 🎭
 
-## Overview 🌟
+A curated collection of dialogues demonstrating empathetic conversation patterns using the React-Respond-Reflect framework. This dataset is designed to help train conversational AI models in providing emotionally intelligent and structured responses.
 
-EMPATH is a unique virtual human model that implements a three-stage response pattern designed around natural human interaction latencies:
+## Dataset Description 📊
 
-1. **Embodied** 🎭 - Immediate emotional and physical reactions (microseconds)
-   - Instant facial expressions and posture changes
-   - Creates immediate emotional connection
-   - Bridges the gap before verbal response
+### Overview
+The dataset contains dialogues between users and a virtual human, where each response follows a three-part structure:
+- **React**: Physical/emotional reactions expressed through actions and body language
+- **Respond**: The actual verbal response to the user
+- **Reflect**: Internal thoughts and analysis of the conversation
 
-2. **Multi-modal** 💬 - Natural conversation with expected latency (milliseconds)
-   - Thoughtful verbal responses
-   - Personality and style in communication
-   - Matches human expectations for dialogue timing
-
-3. **Thoughtful** 🤔 - Background reflection for future turns (seconds)
-   - Deep processing of conversation
-   - Prediction of user's next moves
-   - Invisible to user but enriches future interactions
-
-## Features ✨
-
-- Three-stage response pipeline:
-  1. ⚡ Quick reactions for immediate engagement
-  2. 🗣️ Timed responses for natural flow
-  3. 🧠 Background processing for depth
-- Emotional intelligence through facial expressions
-- Physical presence through posture changes
-- Natural language with personality
-- Multi-turn conversation support
-- GRPO (Guided Reward Proximal Optimization) training
-- 4-bit quantization for efficient inference
-
-## Training 🚀
-
-To train the model:
-
-```bash
-python train_empath.py
+### Format
+Each dialogue is structured as follows:
+```json
+{
+    "conversation_id": "unique_id",
+    "messages": [
+        {
+            "role": "user",
+            "content": "user message"
+        },
+        {
+            "role": "assistant",
+            "content": "virtual human response with react/respond/reflect tags"
+        }
+    ],
+    "num_turns": "number of back-and-forth exchanges"
+}
 ```
 
-The training script will:
-- Load the Qwen 2.5 3B model
-- Apply LoRA fine-tuning
-- Use GRPO with custom reward functions for:
-  - Format adherence
-  - Reaction speed and appropriateness
-  - Response quality and timing
-  - Reflection depth and usefulness
-- Save the model periodically
+### Key Features 🌟
+- Natural conversation flow
+- Structured responses with clear delineation between reaction, response, and reflection
+- Focus on emotional intelligence and empathy
+- Coverage of various challenging situations and emotional states
+- Consistent formatting with XML-style tags
 
-Training parameters can be adjusted in `train_empath.py`.
+### Topics Covered 📝
+- Work-related stress and challenges
+- Personal development and growth
+- Technical learning and coding
+- Time management and productivity
+- Interpersonal relationships
+- Mental health and wellbeing
+- Professional development
+- Self-doubt and confidence building
 
-## Testing 🎮
+## Usage 💡
 
-To test the trained model:
+This dataset is particularly useful for:
+- Training conversational AI models
+- Studying empathetic response patterns
+- Analyzing structured dialogue frameworks
+- Developing emotional intelligence in chatbots
+- Research in human-AI interaction
 
-```bash
-python test_empath.py
+### Loading the Dataset
+```python
+from datasets import load_dataset
+
+dataset = load_dataset("leonvanbokhorst/react-respond-reflect-dialogues-v2")
 ```
 
-This will start an interactive chat session where you can:
-- Experience immediate emotional reactions
-- Engage in natural-feeling dialogue
-- Benefit from ongoing reflection
-- Type 'reset' to start a new conversation
-- Type 'quit' to exit
+## Dataset Creation 🛠️
 
-## Response Pipeline 🔄
+### Curation Rationale
+The dialogues were carefully curated to demonstrate effective emotional support and structured conversation patterns. Each dialogue showcases the React-Respond-Reflect framework in action, providing clear examples of empathetic communication.
 
-EMPATH uses a staged response format that mirrors human interaction latencies:
+### Source Data
+Original dialogues were created and refined through an iterative process, focusing on common scenarios where emotional support and structured responses are beneficial.
 
-```xml
-<react>
-*expression* + *posture*  # Immediate reaction (microseconds)
-</react>
+### Annotations
+The dataset uses XML-style tags to annotate different components of responses:
+- `<react>`: Physical and emotional reactions
+- `<respond>`: Verbal responses
+- `<reflect>`: Internal analysis and thoughts
 
-<respond>
-Natural response here  # Normal conversation latency (milliseconds)
-</respond>
+## Considerations for Use 🤔
 
-<reflect>
-Processing for next turn  # Background thinking (seconds)
-</reflect>
+### Social Impact
+This dataset aims to improve the quality of AI-human interactions by promoting:
+- Emotional intelligence in conversational AI
+- Structured yet natural dialogue patterns
+- Empathetic response frameworks
+- Clear communication practices
+
+### Discussion of Biases
+While efforts have been made to create balanced and helpful dialogues, users should be aware that:
+- The dataset reflects specific communication patterns and strategies
+- Cultural context may influence interpretation
+- The structured format may not suit all conversation styles
+
+## Additional Information 📌
+
+### Dataset Curators
+This dataset was curated by Leon van Bokhorst with a focus on demonstrating effective empathetic communication patterns.
+
+### Licensing Information
+This dataset is released under the MIT license.
+
+### Citation Information
+If you use this dataset in your research, please cite:
+```
+@dataset{react_respond_reflect_dialogues,
+  author = {van Bokhorst, Leon},
+  title = {React-Respond-Reflect Dialogues Dataset},
+  year = {2024},
+  publisher = {HuggingFace},
+  version = {2.0},
+  url = {https://huggingface.co/datasets/leonvanbokhorst/react-respond-reflect-dialogues-v2}
+}
 ```
 
-This design creates more natural and engaging interactions by:
-1. Never leaving the user waiting for initial reaction
-2. Matching expected conversation timing
-3. Continuously improving through background processing
-
-## Dataset 📚
-
-Training data is available at: `leonvanbokhorst/react-respond-reflect-v1`
-
-## Requirements 📋
-
-See `requirements.txt` for full list. Key dependencies:
-- unsloth>=0.3.0
-- vllm>=0.3.0
-- trl>=0.7.10
-- torch>=2.2.0
-
-## Contributing 🤝
-
-Feel free to:
-- Open issues
-- Submit PRs
-- Suggest improvements
-- Share your experiences
-
-## License 📄
-
-MIT License - See LICENSE file for details 
+## Feedback and Contributions 🤝
+Feedback and contributions are welcome! Please feel free to open an issue or submit a pull request on the dataset's repository. 

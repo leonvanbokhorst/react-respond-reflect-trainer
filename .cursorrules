@@ -133,4 +133,4 @@ Best Practices:
 8. Graceful degradation
 
 NOTE:
-When using the OpenAI API, use the gpt-4o-mini model!
+When using the OpenAI API, USE THE gpt-4o-mini model!
