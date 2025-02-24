@@ -1,8 +1,28 @@
 """
 Generate seed dialogues for training using GPT-4-mini.
 
-This script generates a set of seed dialogues following a specific format with
-<react>, <respond>, and <reflect> tags, using curated examples as seeds.
+This script generates a set of seed dialogues following the React-Respond-Reflect format,
+using curated examples as seeds. Each dialogue demonstrates natural conversation flow
+with structured responses containing <react>, <respond>, and <reflect> tags.
+
+The script implements:
+- Batch-based generation with progress tracking
+- Automatic validation of dialogue structure
+- Temperature-based randomization for response variety
+- Configurable batch sizes and total dialogue count
+- Automatic backup and versioning
+
+Example:
+    $ python seed_dialogues_generate_dataset.py
+
+Environment Variables:
+    OPENAI_API_KEY (str): OpenAI API key for GPT-4-mini access
+
+Dependencies:
+    - openai
+    - python-dotenv
+    - tqdm
+    - pathlib
 """
 
 import json
@@ -27,11 +47,18 @@ def load_curated_dialogs(dialog_dir: str = "curated_seed_dialogs") -> List[str]:
     """
     Load all curated dialog examples from the specified directory.
     
+    Each dialog file should contain a header section followed by the actual dialog,
+    separated by a line of equal signs.
+    
     Args:
         dialog_dir: Directory containing the dialog txt files
         
     Returns:
-        List of dialog strings
+        List of dialog strings with headers removed
+        
+    Raises:
+        FileNotFoundError: If dialog_dir doesn't exist
+        ValueError: If dialog files are improperly formatted
     """
     dialogs = []
     dialog_path = Path(dialog_dir)
@@ -51,6 +78,9 @@ def get_random_example(
 ) -> Optional[str]:
     """
     Get a random dialog example that hasn't been used yet.
+    
+    Maintains a set of used example indices to ensure variety in the generated
+    dialogues. Resets the used examples set when all examples have been used.
     
     Args:
         curated_dialogs: List of all curated dialogs
@@ -74,13 +104,21 @@ class DialogueGenerationError(Exception):
 def validate_dialogue_format(dialogue: str) -> bool:
     """
     Validate that the dialogue contains the required tags in the correct order.
-    Each Virtual Human response should have all three tags in order.
+    
+    Each Virtual Human response should have all three tags (<react>, <respond>, <reflect>)
+    in the correct sequence. The function checks both presence and order of tags.
     
     Args:
         dialogue: The generated dialogue string to validate
     
     Returns:
         bool: True if the dialogue format is valid, False otherwise
+        
+    Example valid format:
+        User: Hello!
+        Virtual Human: <react>*smiles warmly*</react>
+        <respond>Hi there! How can I help?</respond>
+        <reflect>User seems friendly and open.</reflect>
     """
     # Split into turns
     turns = dialogue.split("Virtual Human:")
@@ -121,6 +159,9 @@ def generate_seed_dialogue(
     """
     Generate a single seed dialogue using GPT-4-mini with retry logic.
     
+    Uses example dialogues and a template to guide the generation process.
+    Implements retry logic with exponential backoff for reliability.
+    
     Args:
         seed_examples: Example dialogues to guide the generation
         prompt_template: Template for the generation prompt
@@ -131,6 +172,9 @@ def generate_seed_dialogue(
     
     Returns:
         str: Generated dialogue if successful, None if all retries fail
+        
+    Raises:
+        DialogueGenerationError: If generation fails after all retries
     """
     prompt = prompt_template.format(seed_examples=seed_examples)
     
@@ -167,7 +211,16 @@ def generate_seed_dialogue(
     return None
 
 def get_next_batch_number() -> int:
-    """Find the next batch number by checking existing files."""
+    """
+    Find the next batch number by checking existing files.
+    
+    Scans the current directory for files matching the pattern
+    'seed_dialogues_batch_*.json' and returns the next available
+    batch number.
+    
+    Returns:
+        int: Next available batch number
+    """
     existing_batches = list(Path(".").glob("seed_dialogues_batch_*.json"))
     if not existing_batches:
         return 1
@@ -177,7 +230,19 @@ def get_next_batch_number() -> int:
     return max(batch_numbers) + 1
 
 def main():
-    """Main function to generate and save dialogues."""
+    """
+    Main function to generate and save dialogues.
+    
+    Implements the core dialogue generation workflow:
+    1. Loads curated examples
+    2. Generates dialogues in batches
+    3. Validates dialogue format
+    4. Saves results with automatic versioning
+    5. Tracks progress and handles failures
+    
+    Environment variables used:
+        OPENAI_API_KEY: Required for GPT-4-mini access
+    """
     # Load curated dialogs
     curated_dialogs = load_curated_dialogs()
     used_examples = set()  # Track which examples we've used

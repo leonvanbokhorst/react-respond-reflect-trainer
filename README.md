@@ -1,20 +1,11 @@
----
-language:
-- en
-license: mit
-pretty_name: React-Respond-Reflect Dialogues
-size_categories:
-- n<1K
-task_categories:
-- conversational
-task_ids:
-- dialogue-modeling
-- empathetic-dialogue
----
+# React-Respond-Reflect Framework 🎭
 
-# React-Respond-Reflect Dialogues Dataset 🎭
+This repository contains both a curated dialogue dataset and the tools used to generate it. The project aims to improve AI-human interactions through structured, empathetic conversation patterns.
 
-A curated collection of dialogues demonstrating empathetic conversation patterns using the React-Respond-Reflect framework. This dataset is designed to help train conversational AI models in providing emotionally intelligent and structured responses.
+## Project Components 📦
+
+1. **Dataset**: A collection of dialogues demonstrating the React-Respond-Reflect framework
+2. **Generation Tools**: Python scripts for creating and processing dialogue data
 
 ## Dataset Description 📊
 
@@ -25,7 +16,6 @@ The dataset contains dialogues between users and a virtual human, where each res
 - **Reflect**: Internal thoughts and analysis of the conversation
 
 ### Format
-Each dialogue is structured as follows:
 ```json
 {
     "conversation_id": "unique_id",
@@ -43,13 +33,6 @@ Each dialogue is structured as follows:
 }
 ```
 
-### Key Features 🌟
-- Natural conversation flow
-- Structured responses with clear delineation between reaction, response, and reflection
-- Focus on emotional intelligence and empathy
-- Coverage of various challenging situations and emotional states
-- Consistent formatting with XML-style tags
-
 ### Topics Covered 📝
 - Work-related stress and challenges
 - Personal development and growth
@@ -57,65 +40,94 @@ Each dialogue is structured as follows:
 - Time management and productivity
 - Interpersonal relationships
 - Mental health and wellbeing
-- Professional development
-- Self-doubt and confidence building
 
-## Usage 💡
+## Generation Tools 🛠️
 
-This dataset is particularly useful for:
+### Scripts
+1. `seed_dialogues_generate_dataset.py`
+   - Generates dialogues using GPT-4-mini
+   - Batch processing with progress tracking
+   - Temperature-based randomization
+   - Automatic validation
+
+2. `seed_dialogues_convert_to_hf.py`
+   - Converts to HuggingFace format
+   - Generates dataset statistics
+   - Handles dataset publishing
+
+3. `seed_dialogues_validate_tags.py`
+   - Validates XML-style tags
+   - Fixes formatting issues
+   - Provides detailed reporting
+
+4. `seed_dialogues_save_curated.py`
+   - Handles manual curation workflow
+   - Creates automatic backups
+   - Preserves dialogue structure
+
+### Setup & Usage 🚀
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Configure environment:
+```bash
+cp .env.example .env
+# Add your API keys:
+# - OPENAI_API_KEY: For dialogue generation
+# - HF_TOKEN: For HuggingFace upload
+```
+
+3. Run tools:
+```bash
+# Generate dialogues
+python seed_dialogues_generate_dataset.py
+
+# Convert to HuggingFace format
+python seed_dialogues_convert_to_hf.py
+
+# Validate tags
+python seed_dialogues_validate_tags.py
+
+# Save curated dialogues
+python seed_dialogues_save_curated.py
+```
+
+### Directory Structure 📁
+```
+.
+├── curated_seed_dialogs/     # Curated examples
+├── dialogs_to_curate/        # Pending curation
+├── seed_dialogues_*.json     # Generated batches
+└── requirements.txt          # Dependencies
+```
+
+## Using the Dataset 💡
+
+### Loading
+```python
+from datasets import load_dataset
+dataset = load_dataset("leonvanbokhorst/react-respond-reflect-dialogues-v2")
+```
+
+### Applications
 - Training conversational AI models
 - Studying empathetic response patterns
 - Analyzing structured dialogue frameworks
 - Developing emotional intelligence in chatbots
-- Research in human-AI interaction
 
-### Loading the Dataset
-```python
-from datasets import load_dataset
+## Contributing 🤝
 
-dataset = load_dataset("leonvanbokhorst/react-respond-reflect-dialogues-v2")
-```
+1. Follow PEP 8 style guide
+2. Use type hints (PEP 484)
+3. Add Google-style docstrings
+4. Run validation before committing
 
-## Dataset Creation 🛠️
+## Citation 📚
 
-### Curation Rationale
-The dialogues were carefully curated to demonstrate effective emotional support and structured conversation patterns. Each dialogue showcases the React-Respond-Reflect framework in action, providing clear examples of empathetic communication.
-
-### Source Data
-Original dialogues were created and refined through an iterative process, focusing on common scenarios where emotional support and structured responses are beneficial.
-
-### Annotations
-The dataset uses XML-style tags to annotate different components of responses:
-- `<react>`: Physical and emotional reactions
-- `<respond>`: Verbal responses
-- `<reflect>`: Internal analysis and thoughts
-
-## Considerations for Use 🤔
-
-### Social Impact
-This dataset aims to improve the quality of AI-human interactions by promoting:
-- Emotional intelligence in conversational AI
-- Structured yet natural dialogue patterns
-- Empathetic response frameworks
-- Clear communication practices
-
-### Discussion of Biases
-While efforts have been made to create balanced and helpful dialogues, users should be aware that:
-- The dataset reflects specific communication patterns and strategies
-- Cultural context may influence interpretation
-- The structured format may not suit all conversation styles
-
-## Additional Information 📌
-
-### Dataset Curators
-This dataset was curated by Leon van Bokhorst with a focus on demonstrating effective empathetic communication patterns.
-
-### Licensing Information
-This dataset is released under the MIT license.
-
-### Citation Information
-If you use this dataset in your research, please cite:
-```
+```bibtex
 @dataset{react_respond_reflect_dialogues,
   author = {van Bokhorst, Leon},
   title = {React-Respond-Reflect Dialogues Dataset},
@@ -126,5 +138,6 @@ If you use this dataset in your research, please cite:
 }
 ```
 
-## Feedback and Contributions 🤝
-Feedback and contributions are welcome! Please feel free to open an issue or submit a pull request on the dataset's repository. 
+## License 📜
+
+MIT License - See LICENSE file for details 
