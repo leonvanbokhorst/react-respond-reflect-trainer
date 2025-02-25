@@ -1,0 +1,34 @@
+{
+  "fine_tuned": {
+    "format_compliance": 100.0,
+    "reasoning_quality": 7.6,
+    "response_quality": 6.6,
+    "reflection_depth": 7.2,
+    "response_time": 2.9974844455718994,
+    "bleu": 0.0,
+    "rouge1": 0.0,
+    "rouge2": 0.0,
+    "rougeL": 0.0,
+    "meteor": 0.0,
+    "bert_score_precision": 0.0,
+    "bert_score_recall": 0.0,
+    "bert_score_f1": 0.0,
+    "semantic_similarity": 0.0
+  },
+  "baseline": {
+    "format_compliance": 0.0,
+    "reasoning_quality": 0.0,
+    "response_quality": 0.0,
+    "reflection_depth": 0.0,
+    "response_time": 46.363484907150266,
+    "bleu": 0.0,
+    "rouge1": 0.0,
+    "rouge2": 0.0,
+    "rougeL": 0.0,
+    "meteor": 0.0,
+    "bert_score_precision": 0.0,
+    "bert_score_recall": 0.0,
+    "bert_score_f1": 0.0,
+    "semantic_similarity": 0.0
+  }
+}

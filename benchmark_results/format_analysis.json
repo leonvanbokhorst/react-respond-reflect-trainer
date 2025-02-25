@@ -1,0 +1,16 @@
+{
+  "fine_tuned": {
+    "missing_tags": 0,
+    "wrong_order": 0,
+    "empty_react": 0,
+    "empty_respond": 0,
+    "empty_reflect": 0
+  },
+  "baseline": {
+    "missing_tags": 5,
+    "wrong_order": 0,
+    "empty_react": 5,
+    "empty_respond": 5,
+    "empty_reflect": 5
+  }
+}
