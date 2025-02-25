@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-devel-ubuntu22.04 as builder
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04 as builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -19,7 +19,7 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip3 install vllm==0.2.0
 
 # Second stage for smaller image
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
