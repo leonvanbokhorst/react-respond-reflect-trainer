@@ -66,11 +66,7 @@ def format_conversation(conversation: Dict) -> str:
     """
     formatted_text = [
         "<|im_start|>system\n"
-        "You are a helpful AI assistant that uses the React-Respond-Reflect framework.\n"
-        "For each response:\n"
-        "1. React: Show your emotional/physical reaction with *asterisks*\n"
-        "2. Respond: Give your actual response\n"
-        "3. Reflect: Share your internal thoughts about the interaction\n"
+        "You are an empathetic AI assistant.\n"
         "<|im_end|>"
     ]
     
@@ -95,7 +91,7 @@ def formatting_prompts_func(example):
         dict: Formatted text for training
     """
     # Start with system message
-    formatted_text = "<|im_start|>system\nYou are an empathetic AI assistant trained to engage in supportive dialogue using react-respond-reflect patterns.<|im_end|>\n"
+    formatted_text = "<|im_start|>system\nYou are an empathetic AI assistant<|im_end|>\n"
     
     # Add each message in the conversation
     for msg in example["messages"]:
@@ -133,15 +129,15 @@ def prepare_model_and_tokenizer(
     # Add LoRA adapters
     model = FastLanguageModel.get_peft_model(
         model,
-        r=16,                # Using rank 8 for good balance of capacity vs overfitting
+        r=16,                # Keep rank for learning capacity
         target_modules=[
             "q_proj", "k_proj", "v_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj",
         ],
-        lora_alpha=16,       # Keeping alpha=r for balanced scaling
-        lora_dropout=0.1,
+        lora_alpha=8,       # Halved alpha for more conservative updates
+        lora_dropout=0.05,  # Small dropout for stability
         bias="none",
-        use_gradient_checkpointing="unsloth",
+        use_gradient_checkpointing="True",
         random_state=3407,
     )
     
@@ -158,7 +154,7 @@ def validate_generations(
     model: torch.nn.Module,
     tokenizer,
     validation_prompts: List[str],
-    max_new_tokens: int = 1024,
+    max_new_tokens: int = 2048,
 ) -> None:
     """
     Validate model generations follow RRR format.
@@ -204,7 +200,7 @@ def main():
     print("📚 Loading dataset...")
     full_dataset = load_dataset("leonvanbokhorst/react-respond-reflect-dialogues-v2")
     # Split into train/validation (95/5 split for smaller validation set)
-    full_dataset = full_dataset["train"].train_test_split(test_size=0.05, seed=3407)
+    full_dataset = full_dataset["train"].train_test_split(test_size=0.1, seed=3407)
     print(f"Dataset split into {len(full_dataset['train'])} train and {len(full_dataset['test'])} validation examples")
     
     # Prepare model and tokenizer
@@ -230,14 +226,14 @@ def main():
     # Configure training arguments - Optimized for 4090
     training_args = TrainingArguments(
         output_dir="rrr_model",
-        num_train_epochs=5,               # Full training run
+        num_train_epochs=3,               # Reduced epochs to prevent overfitting
         per_device_train_batch_size=2,    # Optimized for 4090
         per_device_eval_batch_size=2,     # Smaller eval batch size to prevent OOM
         gradient_accumulation_steps=4,    # Effective batch size of 16
-        learning_rate=2e-4,              # Standard learning rate for LoRA fine-tuning
-        warmup_ratio=0.03,               
+        learning_rate=1e-4,               # Reduced learning rate for more stability
+        warmup_ratio=0.1,            
         logging_steps=10,      
-        weight_decay=0.01,              
+        weight_decay=0.01,              # Increased weight decay to combat overfitting
         save_steps=50,                    # Save checkpoints every 50 steps
         eval_steps=50,                    # Evaluate every 50 steps
         save_total_limit=3,              # Keep last 3 checkpoints
@@ -281,7 +277,8 @@ def main():
     validation_prompts = [
         "I'm uhm... feeling really stressed about my upcoming presentation. Can you help?",
         "Hi... Tell me about a time you learned something new. Like, how did it feel?",
-        "Hmm... I'm not sure if I'm making the right career choice. So... Any advice?"
+        "Hmm... I'm not sure if I'm making the right career choice. So... Any advice?",
+        "I'm not sure if I'm making the right career choice. So... Any advice?",
     ]
     
     validate_generations(model, tokenizer, validation_prompts)

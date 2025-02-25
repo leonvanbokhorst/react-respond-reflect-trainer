@@ -18,3 +18,13 @@ uvicorn
 pydantic
 requests
 python-dotenv
+matplotlib
+seaborn
+openai
+pandas
+scikit-learn
+python-dotenv
+nltk>=3.8.1
+rouge-score>=0.1.2
+bert-score>=0.3.13
+sentence-transformers>=2.2.2
