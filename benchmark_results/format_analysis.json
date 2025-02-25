@@ -7,10 +7,10 @@
     "empty_reflect": 0
   },
   "baseline": {
-    "missing_tags": 5,
+    "missing_tags": 50,
     "wrong_order": 0,
-    "empty_react": 5,
-    "empty_respond": 5,
-    "empty_reflect": 5
+    "empty_react": 50,
+    "empty_respond": 50,
+    "empty_reflect": 50
   }
 }
