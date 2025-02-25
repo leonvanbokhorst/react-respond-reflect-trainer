@@ -15,8 +15,9 @@ WORKDIR /app
 # Install Python dependencies
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install vLLM with specific version that includes LogProbs
-RUN pip3 install vllm==0.2.0
+# Install PyTorch and vLLM with compatible versions
+RUN pip3 install torch==2.0.1+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+RUN pip3 install vllm==0.1.4
 
 # Second stage for smaller image
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04

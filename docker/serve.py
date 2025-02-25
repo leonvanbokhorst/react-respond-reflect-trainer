@@ -6,7 +6,7 @@ providing both OpenAI-compatible and direct HTTP endpoints.
 
 Features:
 - OpenAI-compatible API endpoint
-- Custom chat template for RRR format
+- Simple prompt formatting for RRR format
 - Configurable model parameters
 - Health check endpoint
 - Proper error handling
@@ -19,7 +19,7 @@ Environment Variables:
 
 import os
 import json
-import argparse
+import time
 from typing import Dict, List, Optional, Union, Any
 
 from fastapi import FastAPI, HTTPException
@@ -31,16 +31,6 @@ from pydantic import BaseModel, Field
 from vllm import SamplingParams
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
-from vllm.entrypoints.openai.protocol import (
-    ChatCompletionRequest,
-    ChatMessage,
-    ChatCompletionResponse,
-    ChatCompletionResponseChoice,
-    CompletionRequest,
-    CompletionResponse,
-    CompletionResponseChoice,
-    UsageInfo,
-)
 from vllm.utils import random_uuid
 
 # Get environment variables with defaults
@@ -79,6 +69,56 @@ class RRRChatRequest(BaseModel):
     stream: Optional[bool] = Field(False, description="Whether to stream the response")
 
 
+# OpenAI-compatible chat request model
+class ChatCompletionRequest(BaseModel):
+    model: str = Field(..., description="Model to use")
+    messages: List[Dict[str, str]] = Field(
+        ..., description="List of messages in the conversation"
+    )
+    temperature: Optional[float] = Field(
+        0.7, description="Sampling temperature between 0 and 2"
+    )
+    max_tokens: Optional[int] = Field(
+        None, description="Maximum number of tokens to generate"
+    )
+    top_p: Optional[float] = Field(1.0, description="Top-p sampling parameter")
+    frequency_penalty: Optional[float] = Field(
+        0.0, description="Frequency penalty parameter"
+    )
+    presence_penalty: Optional[float] = Field(
+        0.0, description="Presence penalty parameter"
+    )
+    stop: Optional[Union[str, List[str]]] = Field(
+        None, description="Stop sequences"
+    )
+
+
+# Helper function to format messages into a prompt
+def format_messages_to_prompt(messages):
+    formatted_prompt = ""
+    
+    # Check if there's a system message
+    if messages and messages[0].get("role") == "system":
+        system_message = messages[0]["content"]
+        formatted_prompt += f"<|im_start|>system\n{system_message}\n<|im_end|>\n\n"
+        messages = messages[1:]
+    else:
+        # Default system message
+        system_message = 'You are a helpful AI assistant that uses the React-Respond-Reflect framework.\nFor each response:\n1. React: Show your emotional/physical reaction with *asterisks*\n2. Respond: Give your actual response\n3. Reflect: Share your internal thoughts about the interaction'
+        formatted_prompt += f"<|im_start|>system\n{system_message}\n<|im_end|>\n\n"
+    
+    # Add the rest of the messages
+    for message in messages:
+        role = message.get("role", "user")
+        content = message.get("content", "")
+        formatted_prompt += f"<|im_start|>{role}\n{content}\n<|im_end|>\n\n"
+    
+    # Add the assistant start token
+    formatted_prompt += "<|im_start|>assistant\n"
+    
+    return formatted_prompt
+
+
 # Initialize the LLM engine
 @app.on_event("startup")
 async def startup_event():
@@ -87,11 +127,10 @@ async def startup_event():
     # Configure engine arguments
     engine_args = AsyncEngineArgs(
         model=MODEL_PATH,
-        max_model_len=MAX_MODEL_LEN,
+        max_seq_len=MAX_MODEL_LEN,
         dtype="bfloat16",  # Use bfloat16 for efficiency
         tensor_parallel_size=1,  # Adjust based on available GPUs
         trust_remote_code=True,  # Required for some models
-        chat_template_file="/app/chat_template.jinja",  # Custom chat template
     )
 
     # Create the engine
@@ -121,13 +160,14 @@ async def chat_completions(request: ChatCompletionRequest):
         presence_penalty=request.presence_penalty,
     )
 
+    # Format messages into a prompt
+    prompt = format_messages_to_prompt(request.messages)
+
     # Process the request
     results_generator = engine.generate(
-        prompt=None,
+        prompt=prompt,
         sampling_params=sampling_params,
         request_id=random_uuid(),
-        prompt_token_ids=None,
-        messages=request.messages,
     )
 
     # Get the results
@@ -141,14 +181,14 @@ async def chat_completions(request: ChatCompletionRequest):
     # Format the response
     choices = []
     for i, output in enumerate(final_output.outputs):
-        choice = ChatCompletionResponseChoice(
-            index=i,
-            message=ChatMessage(
-                role="assistant",
-                content=output.text,
-            ),
-            finish_reason=output.finish_reason,
-        )
+        choice = {
+            "index": i,
+            "message": {
+                "role": "assistant",
+                "content": output.text,
+            },
+            "finish_reason": output.finish_reason,
+        }
         choices.append(choice)
 
     # Calculate token usage
@@ -156,18 +196,18 @@ async def chat_completions(request: ChatCompletionRequest):
     completion_tokens = sum(len(output.token_ids) for output in final_output.outputs)
 
     # Create the response
-    response = ChatCompletionResponse(
-        id=random_uuid(),
-        object="chat.completion",
-        created=int(final_output.timestamp),
-        model=MODEL_PATH,
-        choices=choices,
-        usage=UsageInfo(
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            total_tokens=prompt_tokens + completion_tokens,
-        ),
-    )
+    response = {
+        "id": random_uuid(),
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": MODEL_PATH,
+        "choices": choices,
+        "usage": {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens,
+        },
+    }
 
     return response
 
@@ -183,13 +223,14 @@ async def rrr_chat(request: RRRChatRequest):
         max_tokens=request.max_tokens,
     )
 
+    # Format messages into a prompt
+    prompt = format_messages_to_prompt(request.messages)
+
     # Process the request
     results_generator = engine.generate(
-        prompt=None,
+        prompt=prompt,
         sampling_params=sampling_params,
         request_id=random_uuid(),
-        prompt_token_ids=None,
-        messages=request.messages,
     )
 
     # Get the results
@@ -213,7 +254,7 @@ async def rrr_chat(request: RRRChatRequest):
     # Format the response
     response = {
         "id": random_uuid(),
-        "created": int(final_output.timestamp),
+        "created": int(time.time()),
         "model": MODEL_PATH,
         "content": response_text,
         "components": {
