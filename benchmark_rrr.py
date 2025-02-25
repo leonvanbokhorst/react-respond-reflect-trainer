@@ -621,9 +621,9 @@ class RRRBenchmark:
             "baseline": []
         }
         
-        # Track progress
-        with open(self.progress_file, "a") as f:
-            f.write(f"\nStarting evaluation of {len(self.test_prompts)} prompts...\n")
+        # Track progress in a log file
+        with open("benchmark_progress.log", "w") as log_file:
+            log_file.write(f"Starting benchmark with {len(self.test_prompts)} prompts at {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         
         # Categorize prompts
         prompt_categories = {}
@@ -687,15 +687,36 @@ class RRRBenchmark:
             print(f"Prompt: {prompt}")
             print(f"Category: {prompt_categories[prompt]}")
             
+            # Log progress
+            with open("benchmark_progress.log", "a") as log_file:
+                log_file.write(f"--- Prompt {i+1}/{len(self.test_prompts)} ---\n")
+                log_file.write(f"Prompt: {prompt}\n")
+                log_file.write(f"Category: {prompt_categories[prompt]}\n")
+                log_file.write(f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            
             # Test fine-tuned model
             print("\nGenerating response from fine-tuned model...")
             ft_response, ft_time = self.generate_response(prompt, self.model, self.tokenizer)
             ft_format = self.validate_rrr_format(ft_response)
             
+            # Log fine-tuned response
+            with open("benchmark_progress.log", "a") as log_file:
+                log_file.write("Fine-tuned model response:\n")
+                log_file.write(f"Time: {ft_time:.2f}s\n")
+                log_file.write(f"Format valid: {ft_format['valid']}\n")
+                log_file.write(f"Response: {ft_response[:200]}...\n\n")
+            
             # Test baseline model
             print("\nGenerating response from baseline model...")
             bl_response, bl_time = self.generate_response(prompt, self.baseline, self.baseline_tokenizer)
             bl_format = self.validate_rrr_format(bl_response)
+            
+            # Log baseline response
+            with open("benchmark_progress.log", "a") as log_file:
+                log_file.write("Baseline model response:\n")
+                log_file.write(f"Time: {bl_time:.2f}s\n")
+                log_file.write(f"Format valid: {bl_format['valid']}\n")
+                log_file.write(f"Response: {bl_response[:200]}...\n\n")
             
             # Evaluate quality (only if format is valid)
             ft_quality = {
@@ -708,15 +729,42 @@ class RRRBenchmark:
             if ft_format["valid"]:
                 print("\nEvaluating fine-tuned model response quality...")
                 ft_quality = self.evaluate_response_quality(prompt, ft_response)
+                
+                # Log quality scores
+                with open("benchmark_progress.log", "a") as log_file:
+                    log_file.write("Fine-tuned quality scores:\n")
+                    log_file.write(f"Reasoning: {ft_quality['reasoning_quality']}\n")
+                    log_file.write(f"Response: {ft_quality['response_quality']}\n")
+                    log_file.write(f"Reflection: {ft_quality['reflection_depth']}\n\n")
             
             if bl_format["valid"]:
                 print("\nEvaluating baseline model response quality...")
                 bl_quality = self.evaluate_response_quality(prompt, bl_response)
+                
+                # Log quality scores
+                with open("benchmark_progress.log", "a") as log_file:
+                    log_file.write("Baseline quality scores:\n")
+                    log_file.write(f"Reasoning: {bl_quality['reasoning_quality']}\n")
+                    log_file.write(f"Response: {bl_quality['response_quality']}\n")
+                    log_file.write(f"Reflection: {bl_quality['reflection_depth']}\n\n")
             
             # Calculate NLP metrics using reference data
             print("\nCalculating NLP metrics...")
             ft_nlp_metrics = self.calculate_nlp_metrics(ft_response, prompt)
             bl_nlp_metrics = self.calculate_nlp_metrics(bl_response, prompt)
+            
+            # Log NLP metrics
+            with open("benchmark_progress.log", "a") as log_file:
+                log_file.write("Fine-tuned NLP metrics:\n")
+                for metric, value in ft_nlp_metrics.items():
+                    log_file.write(f"{metric}: {value:.4f}\n")
+                log_file.write("\n")
+                
+                log_file.write("Baseline NLP metrics:\n")
+                for metric, value in bl_nlp_metrics.items():
+                    log_file.write(f"{metric}: {value:.4f}\n")
+                log_file.write("\n")
+                log_file.write("-" * 50 + "\n\n")
             
             # Store results
             category = prompt_categories[prompt]
@@ -1229,7 +1277,7 @@ def main():
         benchmark = RRRBenchmark(
             model_path="rrr_model",
             baseline_model="unsloth/mistral-7b-bnb-4bit",
-            num_samples=5,  # Reduced to 5 samples for a quick test run
+            num_samples=50,  # Increased from 5 to 50 samples for more comprehensive results
             reference_data=reference_data,  # Pass the reference data
         )
         

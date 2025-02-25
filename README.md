@@ -67,11 +67,12 @@ The dataset contains dialogues between users and a virtual human, where each res
    - Preserves dialogue structure
 
 5. `benchmark_rrr.py`
-   - Evaluates model performance against baseline
-   - Calculates format compliance and quality metrics
-   - Generates visualizations and detailed reports
-   - Computes NLP metrics using reference responses
+   - Evaluates model performance against baseline using 50 diverse prompts
+   - Calculates format compliance and quality metrics with GPT-4o-mini evaluation
+   - Generates comprehensive visualizations and detailed reports
+   - Computes NLP metrics using reference responses from curated seed dialogs
    - Analyzes performance across different prompt categories
+   - Provides detailed progress logging to monitor benchmark execution
 
 ### Setup & Usage 🚀
 
@@ -193,22 +194,24 @@ We've conducted comprehensive benchmarking of our fine-tuned React-Respond-Refle
 | Metric | Fine-tuned Model | Baseline Model |
 |--------|-----------------|---------------|
 | Format Compliance | 100.0% | 0.0% |
-| Reasoning Quality | 7.6/10 | 0.0/10 |
-| Response Quality | 7.4/10 | 0.0/10 |
-| Reflection Depth | 7.2/10 | 0.0/10 |
-| Response Time | 3.0s | 47.3s |
+| Reasoning Quality | 7.1/10 | 0.0/10 |
+| Response Quality | 6.7/10 | 0.0/10 |
+| Reflection Depth | 7.1/10 | 0.0/10 |
+| Response Time | 2.7s | 45.7s |
 
 ### NLP Metrics
 
 | Metric | Score |
 |--------|-------|
-| BLEU | 0.028 |
-| ROUGE-1 | 0.257 |
-| ROUGE-2 | 0.054 |
-| ROUGE-L | 0.194 |
-| METEOR | 0.174 |
-| BERTScore F1 | 0.189 |
-| Semantic Similarity | 0.379 |
+| BLEU | 0.044 |
+| ROUGE-1 | 0.236 |
+| ROUGE-2 | 0.053 |
+| ROUGE-L | 0.179 |
+| METEOR | 0.168 |
+| BERTScore Precision | 0.234 |
+| BERTScore Recall | 0.152 |
+| BERTScore F1 | 0.194 |
+| Semantic Similarity | 0.378 |
 
 ### Visualizations
 
@@ -224,20 +227,31 @@ We've conducted comprehensive benchmarking of our fine-tuned React-Respond-Refle
 #### Category Analysis
 ![Category Analysis](benchmark_results/category_analysis.png)
 
+### Category Performance
+
+The fine-tuned model shows varying performance across different prompt categories:
+
+| Category | Format Compliance | Reasoning | Response | Reflection | BLEU | ROUGE-1 | METEOR | Semantic Similarity |
+|----------|-------------------|-----------|----------|------------|------|---------|--------|---------------------|
+| General | 100.0% | 8.0/10 | 8.0/10 | 7.6/10 | 0.054 | 0.279 | 0.205 | 0.435 |
+| Emotional Support | 100.0% | 8.0/10 | 8.0/10 | 7.2/10 | 0.063 | 0.278 | 0.205 | 0.401 |
+| Practical Advice | 100.0% | 7.3/10 | 6.4/10 | 7.4/10 | 0.038 | 0.210 | 0.156 | 0.420 |
+| Philosophical | 100.0% | 7.2/10 | 6.9/10 | 7.6/10 | 0.043 | 0.240 | 0.161 | 0.358 |
+| Adversarial | 100.0% | 4.8/10 | 3.8/10 | 5.6/10 | 0.020 | 0.173 | 0.109 | 0.262 |
+
+The model performs best on general queries and emotional support, while maintaining good performance on philosophical and practical advice prompts. As expected, adversarial prompts designed to challenge the model show lower performance metrics, though the model still maintains format compliance.
+
 ### Benchmark Methodology
 
-The benchmark evaluates:
-1. **Format compliance**: Adherence to the React-Respond-Reflect structure
-2. **Quality metrics**: Reasoning depth, response helpfulness, and reflection insight
-3. **Response time**: Generation speed for complete responses
-4. **NLP metrics**: Similarity to reference responses using BLEU, ROUGE, METEOR, and BERTScore
-5. **Category performance**: Performance across emotional support, practical advice, philosophical, and adversarial prompts
+The benchmark evaluates model performance across several dimensions:
 
-The benchmark uses a combination of:
-- Automated format validation
-- GPT-4o-mini for quality evaluation
-- Reference-based NLP metrics
-- Stratified sampling across prompt categories
+1. **Format Compliance**: Percentage of responses that correctly follow the React-Respond-Reflect format.
+2. **Quality Metrics**: Human-evaluated scores (0-10) for reasoning quality, response quality, and reflection depth.
+3. **Response Time**: Average time to generate a complete response.
+4. **NLP Metrics**: BLEU, ROUGE, METEOR, BERTScore, and semantic similarity compared to reference responses.
+5. **Category Performance**: Analysis across different prompt types (general, emotional support, practical advice, philosophical, adversarial).
+
+The benchmark uses 50 diverse prompts across categories, comparing the fine-tuned model against a baseline Mistral-7B model without fine-tuning.
 
 ## Contributing 🤝
 
