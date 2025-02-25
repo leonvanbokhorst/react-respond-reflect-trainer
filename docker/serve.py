@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Serve a React-Respond-Reflect model using vLLM.
 
