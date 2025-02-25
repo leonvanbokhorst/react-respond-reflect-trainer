@@ -8,7 +8,7 @@ This script prepares a fine-tuned RRR model for deployment with vLLM by:
 3. Saving the tokenizer with the appropriate chat template
 
 Example:
-    $ python export_for_vllm.py --input_dir ./rrr_model --output_dir ./rrr_model_vllm
+    $ python rrr_export_for_vllm.py --input_dir ./rrr_model --output_dir ./rrr_model_vllm
 
 Args:
     --input_dir: Directory containing the trained model

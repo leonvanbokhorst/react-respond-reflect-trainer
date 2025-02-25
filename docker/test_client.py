@@ -7,13 +7,11 @@ the deployed RRR model API. It supports both the OpenAI-compatible
 endpoint and the custom RRR endpoint.
 
 Example:
-    $ python test_client.py --endpoint http://localhost:8000
+    $ python test_client.py --endpoint http://localhost:9999
 """
 
 import argparse
-import json
 import sys
-from typing import Dict, List, Optional
 
 import requests
 
@@ -24,7 +22,7 @@ def parse_args():
     parser.add_argument(
         "--endpoint",
         type=str,
-        default="http://localhost:8000",
+        default="http://localhost:9999",
         help="API endpoint URL",
     )
     parser.add_argument(

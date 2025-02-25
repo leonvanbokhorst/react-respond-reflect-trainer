@@ -6,12 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "9999:9999"
     volumes:
-      - ./rrr_model:/app/rrr_model
+      - ./rrr_model_vllm:/app/rrr_model
     environment:
       - MODEL_PATH=/app/rrr_model
-      - PORT=8000
+      - PORT=9999
       - MAX_MODEL_LEN=2048
     deploy:
       resources:

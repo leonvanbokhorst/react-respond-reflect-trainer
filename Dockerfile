@@ -15,8 +15,8 @@ WORKDIR /app
 # Install Python dependencies
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install vLLM
-RUN pip3 install vllm
+# Install vLLM with specific version that includes LogProbs
+RUN pip3 install vllm==0.2.0
 
 # Second stage for smaller image
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
@@ -34,12 +34,12 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
 
 # Copy model and scripts
-COPY ./rrr_model /app/rrr_model
+COPY ./rrr_model_vllm /app/rrr_model
 COPY ./docker/serve.py /app/serve.py
 COPY ./docker/chat_template.jinja /app/chat_template.jinja
 
 # Expose port for API
-EXPOSE 8000
+EXPOSE 9999
 
 # Run the vLLM server
 CMD ["python3", "serve.py"] 

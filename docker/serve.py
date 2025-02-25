@@ -13,7 +13,7 @@ Features:
 
 Environment Variables:
     MODEL_PATH (str): Path to the model directory (default: /app/rrr_model)
-    PORT (int): Port to run the server on (default: 8000)
+    PORT (int): Port to run the server on (default: 9999)
     MAX_MODEL_LEN (int): Maximum sequence length (default: 2048)
 """
 
@@ -39,14 +39,13 @@ from vllm.entrypoints.openai.protocol import (
     CompletionRequest,
     CompletionResponse,
     CompletionResponseChoice,
-    LogProbs,
     UsageInfo,
 )
 from vllm.utils import random_uuid
 
 # Get environment variables with defaults
 MODEL_PATH = os.environ.get("MODEL_PATH", "/app/rrr_model")
-PORT = int(os.environ.get("PORT", "8000"))
+PORT = int(os.environ.get("PORT", "9999"))
 MAX_MODEL_LEN = int(os.environ.get("MAX_MODEL_LEN", "2048"))
 
 # Create FastAPI app
