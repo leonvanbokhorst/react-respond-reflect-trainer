@@ -1,0 +1,64 @@
+FROM nvidia/cuda:12.1.0-devel-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    python3 \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -u 1000 user
+WORKDIR /home/user
+USER user
+
+# Create and activate virtual environment
+ENV PATH="/home/user/.local/bin:$PATH"
+RUN python3 -m pip install --user --no-cache-dir --upgrade pip
+
+# Install VLLM and dependencies
+RUN python3 -m pip install --user --no-cache-dir \
+    vllm==0.3.0 \
+    transformers==4.36.0 \
+    peft==0.5.0 \
+    accelerate==0.23.0 \
+    sentencepiece==0.1.99 \
+    torch==2.1.0 \
+    rich==13.4.2 \
+    requests==2.31.0
+
+# Copy scripts
+COPY --chown=user:user vllm-rrr-demo.py /home/user/vllm-rrr-demo.py
+COPY --chown=user:user vllm-client.py /home/user/vllm-client.py
+
+# Create directories for models
+RUN mkdir -p /home/user/models
+
+# Set up entrypoint script
+RUN echo '#!/bin/bash\n\
+if [ "$1" = "serve" ]; then\n\
+    exec python3 vllm-rrr-demo.py --mode server --merged_path /home/user/models/rrr_model_merged --port 8000 --tensor_parallel_size ${TENSOR_PARALLEL_SIZE:-1}\n\
+elif [ "$1" = "export" ]; then\n\
+    exec python3 vllm-rrr-demo.py --mode export --model_path /home/user/models/rrr_model --merged_path /home/user/models/rrr_model_merged\n\
+elif [ "$1" = "client" ]; then\n\
+    exec python3 vllm-client.py --api_url http://localhost:8000/v1/chat/completions\n\
+else\n\
+    exec "$@"\n\
+fi' > /home/user/entrypoint.sh && chmod +x /home/user/entrypoint.sh
+
+# Set default command
+ENTRYPOINT ["/home/user/entrypoint.sh"]
+CMD ["serve"]
+
+# Expose port for API
+EXPOSE 8000
