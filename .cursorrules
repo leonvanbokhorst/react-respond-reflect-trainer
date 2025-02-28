@@ -134,3 +134,4 @@ Best Practices:
 
 NOTE:
 When using the OpenAI API, USE THE gpt-4o-mini model!
+NEVER USE OR CREATE .sh scripts WITHOUT ASKING FIRST

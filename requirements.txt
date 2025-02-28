@@ -1,5 +1,6 @@
 unsloth[cuda] @ git+https://github.com/unslothai/unsloth.git
 unsloth_zoo
+torch
 xformers
 trl
 peft
@@ -7,9 +8,17 @@ accelerate
 bitsandbytes
 transformers>=4.37.2
 datasets>=2.16.1
-torch>=2.1.0
+
 tqdm>=4.66.1
 packaging
+
+# vLLM dependencies
+vllm
+fastapi
+uvicorn
+pydantic
+requests
+python-dotenv
 matplotlib
 seaborn
 openai
@@ -20,3 +29,4 @@ nltk>=3.8.1
 rouge-score>=0.1.2
 bert-score>=0.3.13
 sentence-transformers>=2.2.2
+

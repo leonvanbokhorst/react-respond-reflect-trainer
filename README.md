@@ -6,35 +6,40 @@ This repository contains both a curated dialogue dataset and the tools used to g
 
 1. **Dataset**: A collection of dialogues demonstrating the React-Respond-Reflect framework
 2. **Generation Tools**: Python scripts for creating and processing dialogue data
-
+3. **Training Pipeline**: Scripts for fine-tuning models on the RRR framework
+4. **Deployment Tools**: Docker and vLLM integration for serving trained models
 
 ## Dataset Description 📊
 
 ### Overview
+
 The dataset contains dialogues between users and a virtual human, where each response follows a three-part structure:
+
 - **React**: Physical/emotional reactions expressed through actions and body language
 - **Respond**: The actual verbal response to the user
 - **Reflect**: Internal thoughts and analysis of the conversation
 
 ### Format
+
 ```json
 {
-    "conversation_id": "unique_id",
-    "messages": [
-        {
-            "role": "user",
-            "content": "user message"
-        },
-        {
-            "role": "assistant",
-            "content": "virtual human response with react/respond/reflect tags"
-        }
-    ],
-    "num_turns": "number of back-and-forth exchanges"
+  "conversation_id": "unique_id",
+  "messages": [
+    {
+      "role": "user",
+      "content": "user message"
+    },
+    {
+      "role": "assistant",
+      "content": "virtual human response with react/respond/reflect tags"
+    }
+  ],
+  "num_turns": "number of back-and-forth exchanges"
 }
 ```
 
 ### Topics Covered 📝
+
 - Work-related stress and challenges
 - Personal development and growth
 - Technical learning and coding
@@ -45,18 +50,22 @@ The dataset contains dialogues between users and a virtual human, where each res
 ## Generation Tools 🛠️
 
 ### Scripts
+
 1. `seed_dialogues_generate_dataset.py`
+
    - Generates dialogues using GPT-4-mini
    - Batch processing with progress tracking
    - Temperature-based randomization
    - Automatic validation
 
 2. `seed_dialogues_convert_to_hf.py`
+
    - Converts to HuggingFace format
    - Generates dataset statistics
    - Handles dataset publishing
 
 3. `seed_dialogues_validate_tags.py`
+
    - Validates XML-style tags
    - Fixes formatting issues
    - Provides detailed reporting
@@ -66,22 +75,28 @@ The dataset contains dialogues between users and a virtual human, where each res
    - Creates automatic backups
    - Preserves dialogue structure
 
-5. `benchmark_rrr.py`
-   - Evaluates model performance against baseline using 50 diverse prompts
-   - Calculates format compliance and quality metrics with GPT-4o-mini evaluation
-   - Generates comprehensive visualizations and detailed reports
-   - Computes NLP metrics using reference responses from curated seed dialogs
-   - Analyzes performance across different prompt categories
-   - Provides detailed progress logging to monitor benchmark execution
+## Training Pipeline 🚂
+
+### Training Script
+
+The `rrr_train.py` script provides a complete pipeline for fine-tuning models on the RRR framework:
+
+- Uses Unsloth for efficient training
+- Supports LoRA fine-tuning
+- Implements ChatML format
+- Validates RRR format in outputs
+- Optimized for consumer GPUs
 
 ### Setup & Usage 🚀
 
 1. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 2. Configure environment:
+
 ```bash
 cp .env.example .env
 # Add your API keys:
@@ -90,6 +105,7 @@ cp .env.example .env
 ```
 
 3. Run tools:
+
 ```bash
 # Generate dialogues
 python seed_dialogues_generate_dataset.py
@@ -103,17 +119,8 @@ python seed_dialogues_validate_tags.py
 # Save curated dialogues
 python seed_dialogues_save_curated.py
 
-# Run benchmark evaluation
-python benchmark_rrr.py
-```
-
-### Directory Structure 📁
-```
-.
-├── curated_seed_dialogs/     # Curated examples
-├── dialogs_to_curate/        # Pending curation
-├── seed_dialogues_*.json     # Generated batches
-└── requirements.txt          # Dependencies
+# Train the model
+python rrr_train.py
 ```
 
 ## Fine-tuned Model 🤖
@@ -174,12 +181,14 @@ print(response)
 ## Using the Dataset 💡
 
 ### Loading
+
 ```python
 from datasets import load_dataset
 dataset = load_dataset("leonvanbokhorst/react-respond-reflect-dialogues-v2")
 ```
 
 ### Applications
+
 - Training conversational AI models
 - Studying empathetic response patterns
 - Analyzing structured dialogue frameworks
@@ -272,5 +281,3 @@ The benchmark uses 50 diverse prompts across categories, comparing the fine-tune
   url = {https://huggingface.co/datasets/leonvanbokhorst/react-respond-reflect-dialogues-v2}
 }
 ```
-
-
