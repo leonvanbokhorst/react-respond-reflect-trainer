@@ -123,44 +123,6 @@ python seed_dialogues_save_curated.py
 python rrr_train.py
 ```
 
-## Deployment with Docker and vLLM 🐳
-
-This project includes Docker and vLLM integration for easy deployment of trained models.
-
-### Export Model for vLLM
-
-After training, export your model for vLLM deployment:
-
-```bash
-python rrr_export_for_vllm.py --input_dir ./rrr_model --output_dir ./rrr_model_vllm
-```
-
-### Docker Deployment
-
-Deploy your model with Docker:
-
-```bash
-# Build and start the container
-docker-compose up --build
-
-# Or run with specific GPU
-docker-compose up --build -d
-```
-
-The server will be available at http://localhost:8000 with the following endpoints:
-
-- `/health`: Health check endpoint
-- `/v1/chat/completions`: OpenAI-compatible chat completions API
-- `/rrr/chat`: Custom RRR-specific endpoint with component extraction
-
-### Testing the Deployed Model
-
-Use the included test client to interact with your deployed model:
-
-```bash
-python docker/test_client.py --endpoint http://localhost:8000 --api rrr
-```
-
 ### Directory Structure 📁
 
 ```
