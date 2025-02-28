@@ -46,26 +46,94 @@ def push_gguf_to_hub():
         token=hf_token
     )
     
-    # Create a simple README
-    readme_content = """# RRR-Mistral GGUF
+    # Create a detailed README
+    readme_content = """# RRR-Mistral GGUF 🤖
 
-This is the quantized GGUF version of the React-Respond-Reflect Mistral model. 
+This is the quantized GGUF version of the React-Respond-Reflect Mistral model, designed to provide structured responses following a three-step format.
 
-## Model Details
-- Base Model: Mistral 7B
-- Quantization: Q4_K_M
-- Format: GGUF (compatible with llama.cpp)
+## Model Details 📋
 
-## Usage
-This model is designed to follow the React-Respond-Reflect format:
-1. React: Internal thought process
-2. Respond: Direct response to the user
-3. Reflect: Learning from the interaction
+### Base Configuration
+- **Base Model**: Mistral 7B
+- **Architecture**: Mistral (same as base model)
+- **Quantization**: Q4_K_M (4-bit, medium precision)
+- **Format**: GGUF (compatible with llama.cpp)
+- **Context Length**: 2048 tokens
 
-## Example with llama.cpp
+### Training Configuration
+- **Framework**: Unsloth (optimized training)
+- **LoRA Parameters**:
+  - Rank: 16
+  - Alpha: 8
+  - Target Modules: QKV projections, Output, Gate, Up/Down projections
+  - Dropout: 0.05
+- **Training Parameters**:
+  - Learning Rate: 1e-4
+  - Epochs: 3
+  - Batch Size: 2 (effective 16 with gradient accumulation)
+  - Weight Decay: 0.01
+  - Optimizer: AdamW 8-bit
+  - Scheduler: Cosine with warmup
+
+## The React-Respond-Reflect Format 🎯
+
+This model is trained to structure its responses in three distinct steps:
+
+1. **React** `<react>*thought process*</react>`
+   - Internal reasoning
+   - Analysis of the situation
+   - Planning the response
+
+2. **Respond** `<respond>direct response</respond>`
+   - Clear communication to the user
+   - Implementation of the planned response
+   - Focused on addressing the user's needs
+
+3. **Reflect** `<reflect>learning & improvement</reflect>`
+   - Self-evaluation
+   - Lessons learned
+   - Areas for improvement
+
+## Usage with llama.cpp 🛠️
+
+1. **Setup**:
 ```bash
+# Clone llama.cpp
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp
+
+# Build
+make
+
+# Download and run
+wget https://huggingface.co/leonvanbokhorst/rrr-mistral-gguf/resolve/main/rrr-mistral.Q4_K_M.gguf
 ./main -m rrr-mistral.Q4_K_M.gguf -n 1024
 ```
+
+2. **Example Prompt**:
+```
+<|im_start|>system
+You are an empathetic AI assistant.
+<|im_end|>
+<|im_start|>user
+How can I improve my focus while working?
+<|im_end|>
+<|im_start|>assistant
+```
+
+## Dataset 📚
+
+The model was trained on the [React-Respond-Reflect Dialogues v2](https://huggingface.co/datasets/leonvanbokhorst/react-respond-reflect-dialogues-v2) dataset, which contains curated conversations demonstrating the three-step response format.
+
+## License and Usage 📜
+
+This model is intended for research and development in conversational AI. Please use responsibly and in accordance with the base model's license terms.
+
+## Acknowledgments 🙏
+
+- [Mistral AI](https://mistral.ai/) for the base model
+- [Unsloth](https://github.com/unslothai/unsloth) for optimized training
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) for GGUF support
 """
     
     print("\n📝 Creating README.md...")
