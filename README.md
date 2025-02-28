@@ -123,23 +123,6 @@ python seed_dialogues_save_curated.py
 python rrr_train.py
 ```
 
-### Directory Structure 📁
-
-```
-.
-├── curated_seed_dialogs/     # Curated examples
-├── dialogs_to_curate/        # Pending curation
-├── docker/                   # Docker deployment files
-├── rrr_model/                # Trained model output
-├── rrr_model_vllm/           # Exported model for vLLM
-├── seed_dialogues_*.json     # Generated batches
-├── Dockerfile                # Docker configuration
-├── docker-compose.yml        # Docker Compose configuration
-├── rrr_export_for_vllm.py    # Model export script
-├── rrr_train.py              # Training script
-└── requirements.txt          # Dependencies
-```
-
 ## Fine-tuned Model 🤖
 
 We've fine-tuned a Mistral-7B model to follow the React-Respond-Reflect framework, creating a conversational AI that provides structured, empathetic responses.
