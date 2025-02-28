@@ -281,7 +281,3 @@ The benchmark uses 50 diverse prompts across categories, comparing the fine-tune
   url = {https://huggingface.co/datasets/leonvanbokhorst/react-respond-reflect-dialogues-v2}
 }
 ```
-
-## License 📜
-
-MIT License - See LICENSE file for details
