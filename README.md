@@ -281,3 +281,207 @@ The benchmark uses 50 diverse prompts across categories, comparing the fine-tune
   url = {https://huggingface.co/datasets/leonvanbokhorst/react-respond-reflect-dialogues-v2}
 }
 ```
+
+## Model Deployment with FastAPI + Ray Serve 🚀
+
+This repository includes a comprehensive deployment solution for QLora fine-tuned models using FastAPI and Ray Serve. This provides an efficient, scalable API for serving your model in distributed applications.
+
+### Features ✨
+
+- **Quantized Model Serving**: Efficiently serve 4-bit quantized models
+- **Distributed Deployment**: Scale across multiple GPUs and nodes using Ray
+- **Performance Monitoring**: Built-in metrics for tracking inference performance
+- **Docker Ready**: Containerized deployment with Docker and docker-compose
+- **API Documentation**: Auto-generated FastAPI documentation
+
+### Quick Start 🏃‍♂️
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/react-respond-reflect.git
+   cd react-respond-reflect
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run the API locally**:
+   ```bash
+   python main.py --model-path rrr_model --num-replicas 1
+   ```
+
+4. **Test the API**:
+   ```bash
+   python client.py --prompt "Hello, can you help me with something?"
+   ```
+
+### Docker Deployment 🐳
+
+1. **Build and run with Docker Compose**:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Check the API status**:
+   ```bash
+   curl http://localhost:8000/health
+   ```
+
+3. **Generate text via the API**:
+   ```bash
+   curl -X POST http://localhost:8000/generate \
+     -H "Content-Type: application/json" \
+     -d '{"prompt": "Hello, can you help me with something?"}'
+   ```
+
+### Scaling with Ray Cluster 📈
+
+For distributed deployment across multiple nodes:
+
+1. **Start a Ray head node**:
+   ```bash
+   ray start --head --port=6379
+   ```
+
+2. **Connect worker nodes**:
+   ```bash
+   ray start --address=<head-node-address>:6379
+   ```
+
+3. **Run the deployment with Ray address**:
+   ```bash
+   python main.py --ray-address="auto" --num-replicas=2
+   ```
+
+### Configuration ⚙️
+
+Configuration is managed through the `config.py` file and environment variables:
+
+- `MODEL_PATH`: Path to your model directory
+- `NUM_REPLICAS`: Number of model replicas to deploy
+- `MAX_CONCURRENT_QUERIES`: Maximum concurrent queries per replica
+- `RAY_ADDRESS`: Ray cluster address (for distributed deployment)
+- `DEBUG`: Enable debug mode
+
+See `config.py` for more detailed configuration options.
+
+### Monitoring 📊
+
+The deployment includes endpoints for monitoring:
+
+- `/health`: Check the API health status
+- `/stats`: Get model performance statistics
+
+For production deployments, uncomment the Prometheus and Grafana services in docker-compose.yml for advanced monitoring.
+
+# React-Respond-Reflect API
+
+A simple API for generating responses to user prompts, designed to simulate a language model's behavior.
+
+## Overview
+
+This project provides a lightweight API that mimics the behavior of a language model, generating responses to user prompts based on keywords and simple logic. It's designed to be used for testing and development purposes when a full language model deployment is not needed.
+
+## Features
+
+- Health check endpoint to verify API status
+- Text generation endpoint that accepts prompts and parameters
+- Simulated processing time based on response length
+- Metadata about token counts and processing time
+
+## Getting Started
+
+### Prerequisites
+
+- Docker
+- Python 3.10+
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/react-respond-reflect.git
+   cd react-respond-reflect
+   ```
+
+2. Build the Docker image:
+   ```bash
+   docker build -t simple-api -f Dockerfile.simple .
+   ```
+
+3. Start the API:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Verify the API is running:
+   ```bash
+   curl http://localhost:7000/health
+   ```
+
+## API Usage
+
+### Health Check
+
+```bash
+GET /health
+```
+
+Response:
+```json
+{
+  "status": "ok"
+}
+```
+
+### Generate Text
+
+```bash
+POST /generate
+```
+
+Request body:
+```json
+{
+  "prompt": "I'm feeling stressed about my upcoming presentation. Can you help?",
+  "max_new_tokens": 128,
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "top_k": 40,
+  "repetition_penalty": 1.1
+}
+```
+
+Response:
+```json
+{
+  "generated_text": "It's completely normal to feel stressed about presentations. Try these steps: 1) Practice your presentation multiple times, 2) Visualize success, 3) Take deep breaths before starting, 4) Remember that the audience wants you to succeed. You've got this!",
+  "metadata": {
+    "input_tokens": 10,
+    "output_tokens": 45,
+    "inference_time_seconds": 3.605,
+    "tokens_per_second": 12.482
+  },
+  "error": null
+}
+```
+
+## Testing
+
+Use the provided test script to test the API:
+
+```bash
+python test_api.py
+```
+
+Or with a custom prompt:
+
+```bash
+python test_api.py --prompt "I need help with my presentation delivery. I get very nervous."
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

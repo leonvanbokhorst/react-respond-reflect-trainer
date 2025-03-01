@@ -171,7 +171,7 @@ class RRRBenchmark:
     def __init__(
         self,
         model_path: str = "rrr_model",
-        baseline_model: str = "unsloth/mistral-7b-bnb-4bit",
+        baseline_model: str = "mistralai/Mistral-7B-Instruct-v0.3",
         test_dataset_path: str = "leonvanbokhorst/react-respond-reflect-dialogues-v2",
         num_samples: int = 40,
         max_new_tokens: int = 2048,
@@ -261,7 +261,7 @@ class RRRBenchmark:
             self.model, self.tokenizer = FastLanguageModel.from_pretrained(
                 model_name=self.model_path,
                 max_seq_length=2048,
-                load_in_4bit=True,
+                #load_in_4bit=True,
             )
             # Apply chat template to tokenizer
             from unsloth.chat_templates import get_chat_template
@@ -281,7 +281,7 @@ class RRRBenchmark:
             self.baseline, self.baseline_tokenizer = FastLanguageModel.from_pretrained(
                 model_name=self.baseline_model,
                 max_seq_length=2048,
-                load_in_4bit=True,
+                #load_in_4bit=True,
             )
             # Apply chat template to tokenizer
             self.baseline_tokenizer = get_chat_template(
@@ -1276,7 +1276,7 @@ def main():
     try:
         benchmark = RRRBenchmark(
             model_path="rrr_model",
-            baseline_model="unsloth/mistral-7b-bnb-4bit",
+            baseline_model="mistralai/Mistral-7B-Instruct-v0.3",
             num_samples=50,  # Increased from 5 to 50 samples for more comprehensive results
             reference_data=reference_data,  # Pass the reference data
         )

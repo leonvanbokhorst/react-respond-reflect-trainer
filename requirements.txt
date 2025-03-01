@@ -30,3 +30,7 @@ rouge-score>=0.1.2
 bert-score>=0.3.13
 sentence-transformers>=2.2.2
 
+# Ray is already installed in the rayproject/ray base image
+# ray>=2.9.0
+# ray[serve]
+

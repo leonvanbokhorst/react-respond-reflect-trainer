@@ -107,7 +107,7 @@ def formatting_prompts_func(example):
 
 def prepare_model_and_tokenizer(
     max_seq_length: int = 2048,  # Keep at 2048 for multi-turn conversations
-    load_in_4bit: bool = True,
+    load_in_4bit: bool = False,
 ) -> tuple:
     """
     Initialize and prepare the model and tokenizer.
@@ -121,9 +121,9 @@ def prepare_model_and_tokenizer(
     """
     # Initialize model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name="unsloth/mistral-7b-bnb-4bit",
+        model_name="mistralai/Mistral-7B-Instruct-v0.3",
         max_seq_length=max_seq_length,
-        load_in_4bit=load_in_4bit,
+        #load_in_4bit=load_in_4bit,
     )
     
     # Add LoRA adapters
@@ -134,7 +134,7 @@ def prepare_model_and_tokenizer(
             "q_proj", "k_proj", "v_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj",
         ],
-        lora_alpha=8,       # Halved alpha for more conservative updates
+        lora_alpha=16,       # Halved alpha for more conservative updates
         lora_dropout=0.05,  # Small dropout for stability
         bias="none",
         use_gradient_checkpointing="True",
@@ -226,10 +226,10 @@ def main():
     # Configure training arguments - Optimized for 4090
     training_args = TrainingArguments(
         output_dir="rrr_model",
-        num_train_epochs=3,               # Reduced epochs to prevent overfitting
-        per_device_train_batch_size=2,    # Optimized for 4090
-        per_device_eval_batch_size=2,     # Smaller eval batch size to prevent OOM
-        gradient_accumulation_steps=4,    # Effective batch size of 16
+        num_train_epochs=5,               # Reduced epochs to prevent overfitting
+        per_device_train_batch_size=16,    # Optimized for 4090
+        per_device_eval_batch_size=16,     # Smaller eval batch size to prevent OOM
+        gradient_accumulation_steps=1,    # Effective batch size of 16
         learning_rate=1e-4,               # Reduced learning rate for more stability
         warmup_ratio=0.1,            
         logging_steps=10,      
