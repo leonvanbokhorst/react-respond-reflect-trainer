@@ -7,7 +7,8 @@ This repository contains both a curated dialogue dataset and the tools used to g
 1. **Dataset**: A collection of dialogues demonstrating the React-Respond-Reflect framework
 2. **Generation Tools**: Python scripts for creating and processing dialogue data
 3. **Training Pipeline**: Scripts for fine-tuning models on the RRR framework
-4. **Deployment Tools**: Docker and vLLM integration for serving trained models
+4. **Deployment Tools**: Docker and API integration for serving trained models
+5. **Streaming API**: Real-time text generation with the RRR format
 
 ## Dataset Description 📊
 
@@ -282,14 +283,14 @@ The benchmark uses 50 diverse prompts across categories, comparing the fine-tune
 }
 ```
 
-## Model Deployment with FastAPI + Ray Serve 🚀
+## Model Deployment with FastAPI 🚀
 
-This repository includes a comprehensive deployment solution for QLora fine-tuned models using FastAPI and Ray Serve. This provides an efficient, scalable API for serving your model in distributed applications.
+This repository includes a comprehensive deployment solution for LoRA fine-tuned models using FastAPI. This provides an efficient, scalable API for serving your model in production applications.
 
 ### Features ✨
 
-- **Quantized Model Serving**: Efficiently serve 4-bit quantized models
-- **Distributed Deployment**: Scale across multiple GPUs and nodes using Ray
+- **Merged Model Serving**: Efficiently serve merged LoRA models
+- **Streaming Support**: Real-time token-by-token generation
 - **Performance Monitoring**: Built-in metrics for tracking inference performance
 - **Docker Ready**: Containerized deployment with Docker and docker-compose
 - **API Documentation**: Auto-generated FastAPI documentation
@@ -307,123 +308,24 @@ This repository includes a comprehensive deployment solution for QLora fine-tune
    pip install -r requirements.txt
    ```
 
-3. **Run the API locally**:
+3. **Merge your LoRA model with the base model**:
    ```bash
-   python main.py --model-path rrr_model --num-replicas 1
+   ./merge_and_build.sh --base-model mistralai/Mistral-7B-Instruct-v0.3 --adapter ./rrr_model --output-path ./rrr_model_merged
    ```
 
-4. **Test the API**:
+4. **Build and run with Docker Compose**:
    ```bash
-   python client.py --prompt "Hello, can you help me with something?"
+   ./rebuild_and_restart.sh
    ```
 
-### Docker Deployment 🐳
-
-1. **Build and run with Docker Compose**:
-   ```bash
-   docker-compose up -d
-   ```
-
-2. **Check the API status**:
-   ```bash
-   curl http://localhost:8000/health
-   ```
-
-3. **Generate text via the API**:
-   ```bash
-   curl -X POST http://localhost:8000/generate \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "Hello, can you help me with something?"}'
-   ```
-
-### Scaling with Ray Cluster 📈
-
-For distributed deployment across multiple nodes:
-
-1. **Start a Ray head node**:
-   ```bash
-   ray start --head --port=6379
-   ```
-
-2. **Connect worker nodes**:
-   ```bash
-   ray start --address=<head-node-address>:6379
-   ```
-
-3. **Run the deployment with Ray address**:
-   ```bash
-   python main.py --ray-address="auto" --num-replicas=2
-   ```
-
-### Configuration ⚙️
-
-Configuration is managed through the `config.py` file and environment variables:
-
-- `MODEL_PATH`: Path to your model directory
-- `NUM_REPLICAS`: Number of model replicas to deploy
-- `MAX_CONCURRENT_QUERIES`: Maximum concurrent queries per replica
-- `RAY_ADDRESS`: Ray cluster address (for distributed deployment)
-- `DEBUG`: Enable debug mode
-
-See `config.py` for more detailed configuration options.
-
-### Monitoring 📊
-
-The deployment includes endpoints for monitoring:
-
-- `/health`: Check the API health status
-- `/stats`: Get model performance statistics
-
-For production deployments, uncomment the Prometheus and Grafana services in docker-compose.yml for advanced monitoring.
-
-# React-Respond-Reflect API
-
-A simple API for generating responses to user prompts, designed to simulate a language model's behavior.
-
-## Overview
-
-This project provides a lightweight API that mimics the behavior of a language model, generating responses to user prompts based on keywords and simple logic. It's designed to be used for testing and development purposes when a full language model deployment is not needed.
-
-## Features
-
-- Health check endpoint to verify API status
-- Text generation endpoint that accepts prompts and parameters
-- Simulated processing time based on response length
-- Metadata about token counts and processing time
-
-## Getting Started
-
-### Prerequisites
-
-- Docker
-- Python 3.10+
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/react-respond-reflect.git
-   cd react-respond-reflect
-   ```
-
-2. Build the Docker image:
-   ```bash
-   docker build -t simple-api -f Dockerfile.simple .
-   ```
-
-3. Start the API:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. Verify the API is running:
+5. **Check the API status**:
    ```bash
    curl http://localhost:7000/health
    ```
 
-## API Usage
+### API Usage
 
-### Health Check
+#### Health Check
 
 ```bash
 GET /health
@@ -432,11 +334,12 @@ GET /health
 Response:
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "model_loaded": true
 }
 ```
 
-### Generate Text
+#### Generate Text
 
 ```bash
 POST /generate
@@ -446,41 +349,73 @@ Request body:
 ```json
 {
   "prompt": "I'm feeling stressed about my upcoming presentation. Can you help?",
-  "max_new_tokens": 128,
+  "max_new_tokens": 512,
   "temperature": 0.7,
   "top_p": 0.9,
   "top_k": 40,
-  "repetition_penalty": 1.1
+  "repetition_penalty": 1.1,
+  "stream": false
 }
 ```
 
 Response:
 ```json
 {
-  "generated_text": "It's completely normal to feel stressed about presentations. Try these steps: 1) Practice your presentation multiple times, 2) Visualize success, 3) Take deep breaths before starting, 4) Remember that the audience wants you to succeed. You've got this!",
+  "generated_text": "<react>*sits with a calm, supportive posture*</react>\n<respond>It's completely normal to feel stressed about presentations. Try these steps: 1) Practice your presentation multiple times, 2) Visualize success, 3) Take deep breaths before starting, 4) Remember that the audience wants you to succeed. You've got this!</respond>\n<reflect>Their stress about the presentation suggests they might benefit from both practical advice and emotional reassurance. Offering concrete steps helps make the task manageable.</reflect>",
   "metadata": {
-    "input_tokens": 10,
-    "output_tokens": 45,
-    "inference_time_seconds": 3.605,
-    "tokens_per_second": 12.482
+    "input_tokens": 58,
+    "output_tokens": 86,
+    "inference_time_seconds": 2.78,
+    "tokens_per_second": 30.91
   },
   "error": null
 }
 ```
 
-## Testing
+#### Streaming Generation
 
-Use the provided test script to test the API:
+For real-time token-by-token generation, set `stream: true` in your request:
 
-```bash
-python test_api.py
+```json
+{
+  "prompt": "Tell me about the benefits of meditation",
+  "temperature": 0.5,
+  "stream": true
+}
 ```
 
-Or with a custom prompt:
+The API will return a stream of JSON objects, each containing a token and a finished flag:
+
+```json
+{"token":"<", "finished":false}
+{"token":"react", "finished":false}
+{"token":">", "finished":false}
+// ... more tokens ...
+{"token":"", "finished":true, "metadata":{"input_tokens":48, "output_tokens":82, "inference_time_seconds":3.47, "tokens_per_second":23.64}}
+```
+
+### Testing
+
+Use the provided test scripts to test the API:
 
 ```bash
+# Test basic generation
 python test_api.py --prompt "I need help with my presentation delivery. I get very nervous."
+
+# Test streaming generation
+python test_streaming.py --prompt "Tell me about the benefits of meditation" --temperature 0.5
 ```
+
+## Format Validation
+
+The API includes built-in validation to ensure responses follow the React-Respond-Reflect format:
+
+1. Responses must include `<react>`, `<respond>`, and `<reflect>` tags
+2. Tags must appear in the correct order
+3. Each tag must have a corresponding closing tag
+4. The content between tags must be non-empty
+
+This validation ensures consistent, high-quality responses that follow the RRR framework.
 
 ## License
 
