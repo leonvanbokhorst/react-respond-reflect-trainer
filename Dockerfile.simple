@@ -1,0 +1,30 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy application files
+COPY simple_api.py /app/
+COPY deployment-requirements.txt /app/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r deployment-requirements.txt
+RUN pip install --no-cache-dir fastapi uvicorn transformers torch accelerate
+
+# Set environment variables
+ENV MODEL_PATH="/app/model"
+
+# Create model directory
+RUN mkdir -p /app/model
+
+# Copy model files (will be mounted at runtime)
+# COPY rrr_model_merged/ /app/model/
+
+EXPOSE 8000
+
+CMD ["python", "simple_api.py"] 
